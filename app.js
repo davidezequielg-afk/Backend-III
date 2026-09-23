@@ -3,8 +3,6 @@ import mongoose from 'mongoose'
 import ordersRouter from './routes/orders.js'
 import usersRouter from './routes/users.js'
 
-const PORT = 8080
-const JWT_SECRET = 'mi_clave_secreta'
 
 const app = express()
 app.use(express.json())
