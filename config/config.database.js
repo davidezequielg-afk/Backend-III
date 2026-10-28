@@ -5,7 +5,7 @@ config ();
 
 export const connectionDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URL);
+    await mongoose.connect(process.env.MONGO_URI);
     console.log('Base de datos conectada correctamente');
   } catch (error) {
     console.error('Error de conexión con la base de datos:', error);
