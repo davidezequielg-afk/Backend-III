@@ -1,17 +1,12 @@
 import app from './app.js';
 import { connectionDB } from './config/config.database.js';
-import { PORT } from './config/config.port.js';
-import dotenv from 'dotenv';
+import { config } from './config/env.config.js';
 
-dotenv.config();
 const startServer = async () => {
   await connectionDB();
-
-
-const port = PORT();
-app.listen(port, () => {
-      console.log(`Servidor escuchando en el puerto ${port}`);
-    })
+  app.listen(config.PORT, () => {
+    console.log(`Servidor escuchando en el puerto ${config.PORT} (${config.NODE_ENV})`);
+  });
 };
 
 startServer();
