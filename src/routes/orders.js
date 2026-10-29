@@ -1,7 +1,7 @@
 import { Router } from 'express'
-import Order from '../models/Order.js'
-import User from '../models/User.js'
-import Store from '../models/Store.js'
+import Order from '../src/models/Order.js'
+import User from '../src/models/User.js'
+import Store from '../src/models/Store.js'
 
 const router = Router()
 

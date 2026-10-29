@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import User from '../models/User.js'
-import Store from '../models/Store.js'
+import User from '../src/models/User.js'
+import Store from '../src/models/Store.js'
 
 const router = Router()
 
