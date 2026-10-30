@@ -3,7 +3,7 @@ import express from 'express';
 import ordersRouter from './routes/orders.js';
 import usersRouter from './routes/users.js';
 import productsRouter from './routes/products.js';
-import errorHandler from './middlewares/errorHandler.js';
+import { errorHandler } from './middlewares/error.middleware.js';
 
 const app = express();
 
