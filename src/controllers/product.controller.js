@@ -30,7 +30,8 @@ export const getProductByIdController = async (req, res, next) => {
 
 export const updateProductController = async (req, res, next) => {
     try {
-        const product = await ProductService.updateProduct(req.params.id, req.body);
+        const { name, stock, price } = req.body || {};
+        const product = await ProductService.updateProduct(req.params.id, { name, stock, price });
         res.status(200).json({ status: 'success', data: product });
     } catch (error) {
         next(error);
