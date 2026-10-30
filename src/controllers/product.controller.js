@@ -2,9 +2,9 @@ import ProductService from '../services/product.service.js';
 
 export const createProductController = async (req, res, next) => {
     try {
-        const { name, stock, price, status } = req.body || {};
-            const product = await ProductService.createProduct({ name, stock, price, status });
-            res.status(201).json({ status: 'success', data: product });
+        const { name, stock, price } = req.body || {};
+        const product = await ProductService.createProduct({ name, stock, price });
+        res.status(201).json({ status: 'success', data: product });
     } catch (error) {
         next(error);
     }
