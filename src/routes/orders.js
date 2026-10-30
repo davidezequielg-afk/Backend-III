@@ -1,11 +1,10 @@
-import { Router } from 'express'
-import Order from '../models/Order.js'
-import User from '../models/User.js'
-import Store from '../models/Store.js'
+import { Router } from 'express';
+import Order from '../models/Order.js';
+import User from '../models/User.js';
+import Store from '../models/Store.js';
 
 const router = Router()
 
-// El "fat controller" de la demo: hace ocho cosas en un solo lugar
 router.post('/', async (req, res) => {
   const { userId, storeId, address, items } = req.body
 
@@ -28,7 +27,7 @@ router.get('/', async (req, res) => {
   res.json(orders)
 })
 
-// Respuesta ambigua para el bloque de contratos: devuelve 200 aunque falle
+
 router.get('/:id', async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
@@ -39,7 +38,6 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-// String mágico con mayúscula: este if no entra nunca
 router.patch('/:id/deliver', async (req, res) => {
   const order = await Order.findById(req.params.id)
   if (order.status === 'Delivered') {
