@@ -8,7 +8,14 @@ API de ShipNow con arquitectura por capas (Controller → Service → Repository
 ```bash
 npm install
 ```
-3. Una vez que ya esté todo instalado renombremos el archivo `.env.example` a `.env`, y completarlo con las variables solicitadas.
+3. Una vez que ya esté todo instalado copiamos el archivo `.env.example` a `.env`, y completarlo con las variables solicitadas.
+
+```
+PORT=3000
+MONGODB_URI=mongodb://localhost:27017/shipnow
+NODE_ENV=development
+```
+
 4. Una vez que el `.env` esté completo nos podremos poner a iniciar el servidor, usando la siguiente línea:
 ```bash
 npm run dev
@@ -35,7 +42,7 @@ src/
 └── services/         # se encarga de contener toda la lógica del negocio
 ```
 
-## Endpoint
+## Endpoints
 
 | Método | Ruta | Descripción |
 |---|---|---|
@@ -51,4 +58,14 @@ Antes de comenzar con este proyecto nos encontrábamos con una API con pocos arc
 - **Repository**, este es el que se encarga de conectar y conocer a Mongoose, se ocupa de buscar y guardar en la misma. Es muy útil si se quiere cambiar de base de datos, ya que no precisa configuración extra.
 - **Service**, es el que se ocupa de poseer y exportar las reglas del negocio, calcula el status de los productos, los stocks, rechaza mails duplicados, y no sabe nada de la base de datos.
 - **Controller**, este se encarga de contener el manejo de las request y de las response de toda la API.
+
+### Porque se realiza la separacion de la API.
+
+- **Calcular el `status` según el `stock`** va en el Service: es una regla del negocio y no depende de cómo se guardan los datos.
+- **Excluir el campo `__v` y ordenar por fecha** va en el Repository: es una decisión de acceso a datos.
+- **Rechazar un email duplicado** va en el Service, que decide qué hacer. El Repository solo ofrece `getByEmail` para buscarlo.
+- **Responder `404` o `409`** lo decide el middleware de errores; el Service solo lanza el error.
+- **El Controller no importa Mongoose**: solo recibe la request, llama al Service y devuelve la response.
+
+Si cambia la base de datos, se modifica el Repository. Si cambia una regla del negocio, se modifica el Service.
 
