@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { ORDER_STATUS, ORDER_PRIORITY, DELIVERY_STATUS } from '../constants/index.js';
+import { ORDER_STATUS, ORDER_PRIORITY } from '../constants/index.js';
 
 const orderSchema = new mongoose.Schema({
     user: {
