@@ -1,7 +1,12 @@
 import mongoose from 'mongoose';
-import { ORDER_STATUS, ORDER_PRIORITY, DELIVERY_STATUS } from '../index.js';
+import { ORDER_STATUS, ORDER_PRIORITY, DELIVERY_STATUS } from '../constants/index.js';
 
 const orderSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
     status: {
         type: String,
         enum: Object.values(ORDER_STATUS),
