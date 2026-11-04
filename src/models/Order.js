@@ -17,14 +17,5 @@ const orderSchema = new mongoose.Schema({
         enum: Object.values(ORDER_PRIORITY),
         default: ORDER_PRIORITY.MEDIUM
   },
-    deliveryStatus: {
-        type: String,
-        enum: Object.values(DELIVERY_STATUS),
-        default: DELIVERY_STATUS.PENDING
-  },
-    createdAt: {
-        type: Date,
-        default: Date.now
-  }
-});
+}, { timestamps: true });
 export default mongoose.model('Order', orderSchema);
