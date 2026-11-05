@@ -7,8 +7,8 @@ class UserRepository {
         const user = await User.create(data);
         return user;
     }
-    async getAll (filter = {}) {
-        const users = (await User.find(filter).select(DEFAULT_PROJECTION)).toSorted({ cratedAt: -1}).lean();
+    async getAll(filter = {}) {
+        const users = await User.find(filter).select(DEFAULT_PROJECTION).lean();
         return users;
     }
     async getById(id) {
