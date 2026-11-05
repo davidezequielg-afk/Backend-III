@@ -27,6 +27,9 @@ class UserRepository {
         const user = await User.findByIdAndDelete({ _id: id }, { projection: DEFAULT_PROJECTION });
         return user;
     }
+    async insertMany(users){
+        return User.insertMany(users);
+    }
 }
 
 export default new UserRepository();
