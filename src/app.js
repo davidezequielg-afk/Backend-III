@@ -2,6 +2,7 @@ import express from 'express';
 
 import usersRouter from './routes/users.js';
 import productsRouter from './routes/products.js';
+import mocksRouter from './routes/mocks.js';
 import { errorHandler } from './middlewares/error.middleware.js';
 
 const app = express();
@@ -10,6 +11,7 @@ app.use(express.json())
 
 app.use('/api/users', usersRouter)
 app.use('/api/products', productsRouter)
+app.use('/api/mocks', mocksRouter)
 app.use(errorHandler);
 
 
