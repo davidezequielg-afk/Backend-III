@@ -20,12 +20,12 @@ class UserRepository {
         return user;
     }
     async update(id, data) {
-        const user = await User.findByIdAndUpdate({ _id: id }, data, { new: true, runValidators: true, projection: DEFAULT_PROJECTION });
-        return user;
+    const user = await User.findByIdAndUpdate(id, data, { new: true, runValidators: true, projection: DEFAULT_PROJECTION });
+    return user;
     }
     async delete(id) {
-        const user = await User.findByIdAndDelete({ _id: id }, { projection: DEFAULT_PROJECTION });
-        return user;
+    const user = await User.findByIdAndDelete(id, { projection: DEFAULT_PROJECTION });
+    return user;
     }
     async insertMany(users){
         return User.insertMany(users);
