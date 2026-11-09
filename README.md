@@ -39,6 +39,7 @@ src/
 ├── models/           # los modelos de mongoose, acá no se recibe ni debe escribirse lógica del negocio
 ├── repositories/     # conecta la base de datos con el sistema, es el único que debe conectarse entre ambos
 ├── routes/           # conectan cada endpoint con su controlador
+├── errors/           # errores personalizados (AppError) y diccionario de errores
 └── services/         # se encarga de contener toda la lógica del negocio
 ```
 
@@ -81,6 +82,56 @@ Los endPoints que se usaran son:
 
 ### Relaciones.
 Para comprender mejor la union de cada cosa hay que relacionar que cada pedido ingresado corresponde a un solo usuario, y cada uno de estos pedidos le corresponde un envio que queda a cargo de un solo repartidor, el cual es un usuario con otra responsabilidad (courier). En el caso que no salga ninguno de estos ultimos el envio quedara sin un repartidor asignado.
+
+## Manejo de errores.
+Para poder centralizar las respuestas y codigos de errores se realiza una integracion de todos estos en un solo lugar, lo que beneficia a la busqueda de errores. Por ejemplo si tenemos un error de HTTP: 404 y la API nos brinda un 500, el primer lugar donde debemos buscar es el este archivo (` \src\errors\error.dictionary.js `). A su vez a la hora de realizar una nueva integracion que pueda contener respuestas a errores no hay que escribirlos a mano.
+Para comprender el flujo que esto presenta es sencillo dar a entender que el service detecta el error y lanza un AppError, el controller lo pasa con next(error) y el middleware es el único que responde.
+
+Todos los errores salen del middleware global y tienen la misma estructura:
+```json
+{ "status": "error", "code": "USER_NOT_FOUND", "message": "Usuario no encontrado" }
+```
+- `status`: siempre `"error"`.
+- `code`: identifica el error (primera columna de la tabla).
+- `message`: mensaje para el cliente.
+
+Las reespuestas que encontraremos en esta seccion son:
+
+| Código | Estado HTTP | Respuesta | Descripción |
+|---|---|---|---|
+| `USER_NOT_FOUND` | 404 | Usuario no encontrado | No existe un usuario con el ID indicado (consulta, actualización o eliminación). |
+| `USER_ALREADY_EXISTS` | 409 | El usuario ya existe | Se intenta crear un usuario con un email que ya está registrado. |
+| `EMAIL_REQUIRED` | 400 | El correo electrónico es obligatorio | Se intenta crear un usuario sin enviar el email. |
+| `EMAIL_ALREADY_EXISTS` | 409 | El correo electrónico ya existe | Se intenta actualizar un usuario con un email que ya usa otro usuario. |
+| `VALIDATION_ERROR` | 400 | Los datos proporcionados no son válidos | Los datos enviados no cumplen las reglas del modelo (campos obligatorios, valores permitidos). |
+| `PRODUCT_NOT_FOUND` | 404 | Producto no encontrado | No existe un producto con el ID indicado (consulta, actualización o eliminación). |
+| `PRODUCT_ALREADY_EXISTS` | 409 | El producto ya existe | Se intenta crear un producto con un nombre que ya existe. |
+| `ORDER_NOT_FOUND` | 404 | Orden no encontrada | No existe un pedido con el ID indicado. Reservado para futuros endpoints de pedidos; actualmente no se utiliza. |
+| `INVALID_STATUS` | 400 | Estado inválido | El estado enviado no es uno de los permitidos. Reservado para futuras validaciones de estado; actualmente no se utiliza. |
+| `INVALID_ID` | 400 | El ID proporcionado no es válido | El ID de la URL no tiene un formato válido de la Base de Datos. |
+| `INVALID_QTY` | 400 | La cantidad debe ser un numero entero entre el 1 y el 100 | En los mocks, `qty` es negativa, cero, decimal, texto o mayor que 100. |
+| `SEED_FAILED` | 500 | Error al cargar los datos de prueba del sistema en la base de datos | Falló la inserción de los datos simulados en la Base de Datos. |
+| `INTERNAL_SERVER_ERROR` | 500 | Error interno del servidor | Error inesperado que no corresponde a ningún caso anterior. |
+
+### Comprobaciones de los casos inválidos
+Todas las pruebas se deben hacer con el servidor corriendo y desde Postman o programa similar. En cada caso, la respuesta tiene que tener la estructura de error que describimos mas arriba.
+
+| Caso | Request | Estado HTTP | Código | Cómo comprobarlo |
+|---|---|---|---|---|
+| Cantidad negativa | `GET /api/mocks/users?qty=-5` | 400 | `INVALID_QTY` | Enviar `qty` con un número negativo. |
+| Cantidad igual a cero | `POST /api/mocks/seed?qty=0` | 400 | `INVALID_QTY` | Enviar `qty=0`. |
+| Cantidad decimal | `GET /api/mocks/users?qty=2.5` | 400 | `INVALID_QTY` | Enviar `qty` con un número con decimales. |
+| Cantidad no numérica | `GET /api/mocks/users?qty=abc` | 400 | `INVALID_QTY` | Enviar `qty` con texto. |
+| Cantidad mayor al máximo | `GET /api/mocks/users?qty=101` | 400 | `INVALID_QTY` | Enviar `qty` mayor a 100. |
+| Falla al cargar en MongoDB | `POST /api/mocks/seed?qty=3` | 500 | `SEED_FAILED` | Detener MongoDB con el servidor ya iniciado y ejecutar el seed. |
+| ID con formato inválido | `GET /api/users/123` | 400 | `INVALID_ID` | Usar un ID que no tenga formato de MongoDB. |
+| Usuario inexistente | `GET /api/users/<id válido>` | 404 | `USER_NOT_FOUND` | Usar un ID con formato correcto que no esté en la base (por ejemplo, de un usuario ya eliminado). |
+| Usuario sin email | `POST /api/users` | 400 | `EMAIL_REQUIRED` | Enviar el body sin el campo `email`. |
+| Usuario sin nombre | `POST /api/users` | 400 | `VALIDATION_ERROR` | Enviar el body con `email` pero sin `name`. |
+| Usuario duplicado | `POST /api/users` | 409 | `USER_ALREADY_EXISTS` | Enviar dos veces el mismo `email`. |
+| Email ya en uso | `PATCH /api/users/<id>` | 409 | `EMAIL_ALREADY_EXISTS` | Actualizar un usuario con el `email` de otro. |
+| Producto inexistente | `GET /api/products/<id válido>` | 404 | `PRODUCT_NOT_FOUND` | Usar un ID con formato correcto que no esté en la base. |
+| Producto duplicado | `POST /api/products` | 409 | `PRODUCT_ALREADY_EXISTS` | Crear dos productos con el mismo `name`. |
 
 ## Evidencias de Uso.
 ### A continuacios se veran, en formato de imagenes, las evidencias de como se verian el uso de las RUTAS mediante el uso del programa de POSTMAN.
@@ -125,3 +176,15 @@ Para comprender mejor la union de cada cosa hay que relacionar que cada pedido i
 
 - DELETE /api/products/:id
 ![DELETE /api/products/:id](images/DELETE%20-api-products-id.png)
+
+## Evidencias de Uso de errores.
+### A continuacios se veran, en formato de imagenes, las evidencias de como se verian los errores que pueden dejar los endpoints teniendo en cuenta el uso del programa de POSTMAN.
+
+- GET /api/mocks/users con numero entero negativo
+![GET /api/mocks/users?qty=-N](images/GET%20-api-mocks-error.png)
+
+- GET /api/users/:id  con ID inválido
+![GET /api/users/id](images/GET-api-users-id-error.png)
+
+- POST /api/mocks/seed sin conexión a la base de datos
+![POST /api/mocks](images/POST%20api-mocks-error.png)
