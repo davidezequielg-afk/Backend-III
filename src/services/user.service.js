@@ -1,20 +1,15 @@
 import UserRepository from '../repositories/user.repository.js';
-
-const fail = (statusCode, message) => {
-    const error = new Error(message);
-    error.statusCode = statusCode;
-    return error;
-};
+import { AppError } from '../errors/AppError.js';
 
 class UserService {
     async createUser(data) {
         if(!data.email) {
-            throw fail(400, 'El correo electrónico es obligatorio');
+            throw new AppError('EMAIL_REQUIRED');
         }
         const emailNormalized = data.email.toLowerCase() ;
         const existingUser = await UserRepository.getByEmail(emailNormalized);
         if (existingUser) {
-            throw fail(409, 'El usuario ya existe');
+            throw new AppError('USER_ALREADY_EXISTS');
         }
         return UserRepository.create({ ...data, email: emailNormalized });
     }
@@ -24,7 +19,7 @@ class UserService {
     async getUserById(id) {
         const user = await UserRepository.getById(id);
         if (!user) {
-            throw fail(404, 'Usuario no encontrado');
+            throw new AppError('USER_NOT_FOUND');
         }
         return user;
     }
@@ -34,14 +29,14 @@ class UserService {
             data.email = emailNormalized;
         }
         if(data.email) {
-        const existingEmailUser = await UserRepository.getByEmail(emailNormalized);
-        if (existingEmailUser && existingEmailUser.id !== id) {
-            throw fail(409, 'El correo electrónico ya está en uso');
+            const existingEmailUser = await UserRepository.getByEmail(emailNormalized);
+            if (existingEmailUser && existingEmailUser.id !== id) {
+                throw new AppError('EMAIL_ALREADY_EXISTS');
         }
         }
         const updatedUser = await UserRepository.update(id, data);
         if (!updatedUser) {
-            throw fail(404, 'Usuario no encontrado para actualizar');
+            throw new AppError('USER_NOT_FOUND');
         }
         return updatedUser;
     }
@@ -49,7 +44,7 @@ class UserService {
     async deleteUser(id) {
         const deletedUser = await UserRepository.delete(id);
         if (!deletedUser) {
-            throw fail(404, 'Usuario no encontrado para eliminar');
+            throw new AppError('USER_NOT_FOUND');
         }
         return deletedUser;
     }
