@@ -1,19 +1,19 @@
 import { faker } from '@faker-js/faker';
 import { ORDER_STATUS, ORDER_PRIORITY, DELIVERY_STATUS, USER_ROLES } from '../constants/index.js';
+import { AppError } from '../errors/AppError.js';
 import userRepository from '../repositories/user.repository.js';
 import orderRepository from '../repositories/order.repository.js';
 import deliveryRepository from '../repositories/delivery.repository.js';
-
 
 const DEFAULT_QTY = 10;
 const MAX_QTY = 100;
 
 const normalizeQty = (qty) => {
-    const n = Number(qty);
-    if(!Number.isInteger(n) || n < 1) {
-        return DEFAULT_QTY;
+    const normalizedQty = Number(qty ?? DEFAULT_QTY);
+    if(!Number.isInteger(normalizedQty) || normalizedQty < 1 || normalizedQty > MAX_QTY) {
+        throw new AppError('INVALID_QTY');
     }
-    return Math.min(n, MAX_QTY);
+    return normalizedQty;
 }
 
 export const generateUsers = (qty) => {
@@ -25,8 +25,10 @@ export const generateUsers = (qty) => {
 }
 
 export const seed = async (qty) => {
-    const users = await userRepository.insertMany(generateUsers(qty));
-    const orders = await orderRepository.insertMany(
+    const generatedUsers = generateUsers(qty);
+    try {
+        const users = await userRepository.insertMany(generatedUsers);
+        const orders = await orderRepository.insertMany(
         users.map(user => ({
             user: user._id,
             status: faker.helpers.arrayElement(Object.values(ORDER_STATUS)),
@@ -41,5 +43,10 @@ export const seed = async (qty) => {
             status: faker.helpers.arrayElement(Object.values(DELIVERY_STATUS))
         }))
     );
-    return { usuarios: users.length, orders: orders.length, envios: deliveries.length };
+    
+        return { usuarios: users.length, pedidos: orders.length, envios: deliveries.length };
+    } catch (error) {
+        console.error(error);
+        throw new AppError('SEED_FAILED');
+    }
 }
