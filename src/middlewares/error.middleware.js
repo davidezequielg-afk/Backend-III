@@ -1,19 +1,20 @@
+import { RESPONSE_STATUS } from '../constants/index.js';
+import { AppError } from '../errors/AppError.js';
+
 export const errorHandler = (err, req, res, next) => {
-    let statusCode = err.statusCode;
-    let message = err.message;
-
-    if (err.name === 'CastError') {
-        statusCode = 400;
-        message = 'ID inválido';
-    } else if (err.name === 'ValidationError') {
-        statusCode = 400;
+    let error;
+    if (err instanceof AppError) {
+        error = err;
     }
-
-    if (!statusCode) {
+    else if (err.name === 'CastError') {
+        error = new AppError('INVALID_ID');
+    }
+    else if (err.name === 'ValidationError') {
+        error = new AppError('VALIDATION_ERROR');
+    }
+    else {
         console.error(err);
-        statusCode = 500;
-        message = 'Error interno del servidor';
+        error = new AppError('INTERNAL_SERVER_ERROR');
     }
-
-    res.status(statusCode).json({ status: 'error', message });
+    res.status(error.statusCode).json({ status: RESPONSE_STATUS.ERROR, code: error.code, message: error.message });
 };
