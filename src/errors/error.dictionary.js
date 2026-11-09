@@ -17,6 +17,10 @@ export const ERROR_DICTIONARY = Object.freeze({
         statusCode: HTTP_STATUS.CONFLICT,
         message: 'El correo electrónico ya existe'
     },
+    VALIDATION_ERROR: {
+        statusCode: HTTP_STATUS.BAD_REQUEST,
+        message: 'Los datos proporcionados no son válidos'
+    },
     PRODUCT_NOT_FOUND: {
         statusCode: HTTP_STATUS.NOT_FOUND,
         message: 'Producto no encontrado'
@@ -32,6 +36,10 @@ export const ERROR_DICTIONARY = Object.freeze({
     INVALID_STATUS: {
         statusCode: HTTP_STATUS.BAD_REQUEST,
         message: 'Estado inválido'
+    },
+    INVALID_ID: {
+        statusCode: HTTP_STATUS.BAD_REQUEST,
+        message: 'El ID proporcionado no es válido'
     },
     INVALID_QTY: {
         statusCode: HTTP_STATUS.BAD_REQUEST,
