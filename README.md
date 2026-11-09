@@ -52,6 +52,8 @@ src/
 | PATCH | /api/products/:id | Actualizar parcialmente |
 | DELETE | /api/products/:id | Eliminar |
 | POST / GET / PATCH / DELETE | /api/users | Mismo esquema para usuarios |
+| GET | /api/mocks/users?qty=N | Simulacion de creacion de usuarios |
+| POST | /api/mocks/seed?qty=N | Inserccion de Usuarios, Pedidos y envios a la BBDD (todos son datos no reales) |
 
 ## Separación y reestructuración de la API.
 Antes de comenzar con este proyecto nos encontrábamos con una API con pocos archivos y cada uno tenía miles tareas para ejecutar. Por lo que se decidió realizarle una limpieza y una reestructuración.
@@ -69,3 +71,57 @@ Antes de comenzar con este proyecto nos encontrábamos con una API con pocos arc
 
 Si cambia la base de datos, se modifica el Repository. Si cambia una regla del negocio, se modifica el Service.
 
+## Mocks.
+Los Mocks que usaremos en esta API nos dan detalle de la generacion de usuarios, tanto clientes como repartidores, cantidad de pedidos y repartos. En forma de simulacion para poder verificar que todos los controladroes esten realizando de la mejor manera su trabajo. 
+
+### Endpoints.
+Los endPoints que se usaran son:
+- GET /api/mocks/users?qty=N : El cual devuelve los usuarios simulados sin que estos queden guardados en nuestra Base de Datos. Cabe aclarar que N, es un numero entero, y es la cantidad de usuarios simulados que vayamos a crear. En el caso que no se agrege algun numero queda de manera predeterminada el numero 10, ademas tiene un limite de hasta 100 usuarios, por cada simulacion.
+- POST /api/mocks/seed?qty=N : El cual genera e inserta usuarios, pedidos y envios a nuestra Base de Datos, todos son datos simulados, lo que significa que estos si son guardados de manera permanente en ella, por lo que cada vez que se ejecute la simulacion no se borraran las anteriores. Cabe aclarar que N, es un numero entero, y es la cantidad de datos que se generaran, ademas este numero hara que se generen esa misma cantidad de usuarios, pedidos y envios. En el caso que no se agrege algun numero queda de manera predeterminada el numero 10, ademas tiene un limite de hasta 100 usuarios, por cada simulacion.
+
+### Relaciones.
+Para comprender mejor la union de cada cosa hay que relacionar que cada pedido ingresado corresponde a un solo usuario, y cada uno de estos pedidos le corresponde un envio que queda a cargo de un solo repartidor, el cual es un usuario con otra responsabilidad (courier). En el caso que no salga ninguno de estos ultimos el envio quedara sin un repartidor asignado.
+
+## Evidencias de Uso.
+### A continuacios se veran, en formato de imagenes, las evidencias de como se verian el uso de las RUTAS mediante el uso del programa de POSTMAN.
+
+#### Endpoints GET
+
+- GET /api/users
+![GET /api/users](images/GET%20api-users.png)
+
+- GET /api/products
+![GET /api/products](images/GET%20api-products.png)
+
+- GET /api/products/id
+![GET /api/products/id](images/GET%20api-products-id.png)
+
+- GET /api/mocks/users
+![GET /api/mocks/users?qty=N](images/GET%20-api-mocks.png)
+
+#### Endpoints POST
+
+- POST /api/users
+![POST /api/users](images/POST%20-api-users.png)
+
+- POST /api/products
+![POST /api/products](images/POST%20-api-products.png)
+
+- POST /api/mocks/seed
+![POST /api/mocks](images/POST%20api-mocks.png)
+
+#### Endpoints PATCH
+
+- PATCH /api/products/:id
+![PATCH /api/products/:id](images/PATCH%20api-products-id.png)
+
+- PATCH /api/users/:id
+![PATCH /api/users/:id](images/PATCH%20-api-users-id.png)
+
+#### Endpoints DELETE
+
+- DELETE /api/users/:id
+![DELETE /api/users/:id](images/DELETE%20-api-users-id.png)
+
+- DELETE /api/products/:id
+![DELETE /api/products/:id](images/DELETE%20-api-products-id.png)
