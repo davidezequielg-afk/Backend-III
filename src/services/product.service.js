@@ -1,11 +1,7 @@
 import productRepository from '../repositories/product.repository.js';
 import  { PRODUCTS_STATUS } from '../constants/index.js';
+import { AppError } from '../errors/AppError.js';
 
-const fail = (statusCode, message) => {
-    const error = new Error(message);
-    error.statusCode = statusCode;
-    return error;
-};
 const statusFromStock = (stock) =>
     stock > 0 ? PRODUCTS_STATUS.AVAILABLE : PRODUCTS_STATUS.OUT_OF_STOCK;
 
@@ -13,7 +9,7 @@ class ProductService {
     async createProduct(data) {
         const existingProduct = await productRepository.getAll({ name: data.name });
         if (existingProduct.length > 0) {
-            throw fail(409, 'El producto ya existe');
+            throw new AppError('PRODUCT_ALREADY_EXISTS');
         }
         return productRepository.create({ ...data, status: statusFromStock(data.stock ?? 0) });
     }
@@ -25,7 +21,7 @@ class ProductService {
     async getProductById(id) {
         const product = await productRepository.getById(id);
         if (!product) {
-            throw fail(404, 'Producto no encontrado');
+            throw new AppError('PRODUCT_NOT_FOUND');
         }
         return product;
     }
@@ -34,7 +30,7 @@ class ProductService {
         const changesProduct = data.stock !== undefined ? { ...data, status: statusFromStock(data.stock) } : { ...data };
         const updatedProduct = await productRepository.update(id, changesProduct);
         if (!updatedProduct) {
-            throw fail(404, 'Producto no encontrado para actualizar');
+            throw new AppError('PRODUCT_NOT_FOUND');
         }
         return updatedProduct;
     }
@@ -42,7 +38,7 @@ class ProductService {
     async deleteProduct(id) {
         const deletedProduct = await productRepository.delete(id);
         if (!deletedProduct) {
-            throw fail(404, 'Producto no encontrado para eliminar');
+            throw new AppError('PRODUCT_NOT_FOUND');
         }
         return deletedProduct;
     }
