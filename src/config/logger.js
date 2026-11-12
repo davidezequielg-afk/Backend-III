@@ -21,7 +21,7 @@ const logger = winston.createLogger({
             )
         }),
         new DailyRotateFile({
-            filename: 'logs/%DATE%.log',
+            filename: 'logs/error-%DATE%.log',
             datePattern: 'YYYY-MM-DD',
             level: 'error',
             zippedArchive: true,
