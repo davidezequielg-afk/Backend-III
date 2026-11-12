@@ -23,5 +23,5 @@ export const errorHandler = (err, req, res, next) => {
 };
 export const routeNotFoundHandler = (req, res, next) => {
     const error = new AppError('ROUTE_NOT_FOUND');
-    res.status(error.statusCode).json({ status: RESPONSE_STATUS.ERROR, code: error.code, message: error.message });
+    next(error);
 };
