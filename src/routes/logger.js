@@ -15,7 +15,5 @@ router.get('/', (req, res) => {
         message: 'Logs generados en todos los niveles'
     });
 });
-router.get('/boom', () => {
-    throw new Error('Se produjo un error en la prueba');
-});
+
 export default router;
