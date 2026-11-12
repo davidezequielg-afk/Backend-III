@@ -52,5 +52,13 @@ export const ERROR_DICTIONARY = Object.freeze({
     INTERNAL_SERVER_ERROR: {
         statusCode: HTTP_STATUS.INTERNAL_SERVER_ERROR,
         message: 'Error interno del servidor'
+    },
+    ROUTE_NOT_FOUND: {
+        statusCode: HTTP_STATUS.NOT_FOUND,
+        message: 'Ruta no encontrada'
+    },
+    INVALID_JSON: {
+        statusCode: HTTP_STATUS.BAD_REQUEST,
+        message: 'JSON inválido'
     }
 });
