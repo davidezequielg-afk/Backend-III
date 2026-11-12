@@ -1,7 +1,7 @@
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 
-const levels = { fatal: 0, error: 1, warn: 2, info: 3, http: 4, debug: 5 };
+const levels = { fatal: 0, error: 1, warning: 2, info: 3, http: 4, debug: 5 };
 const colors = { fatal: 'bold red', error: 'red', warn: 'yellow', info: 'green', http: 'cyan', debug: 'blue' };
 winston.addColors(colors);
 
