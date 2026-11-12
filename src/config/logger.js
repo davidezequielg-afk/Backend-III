@@ -14,7 +14,7 @@ const logger = winston.createLogger({
         new winston.transports.Console({
             format: winston.format.combine(
                 winston.format.colorize(),
-                winston.format.timestamp(),
+                winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
                 winston.format.printf(({ level, message, timestamp }) => {
                     return `${timestamp} [${level}]: ${message}`;
                 })
@@ -28,7 +28,7 @@ const logger = winston.createLogger({
             maxSize: '5m',
             maxFiles: '14d',
             format: winston.format.combine(
-                winston.format.timestamp(),
+                winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
                 winston.format.printf(({ level, message, timestamp }) => {
                     return `${timestamp} [${level}]: ${message}`;
                 })
