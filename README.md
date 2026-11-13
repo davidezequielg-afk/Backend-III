@@ -15,6 +15,7 @@ PORT=3000
 MONGODB_URI=mongodb://localhost:27017/shipnow
 NODE_ENV=development
 ```
+- Para el caso de `NODE_ENV` tambien se puede poner production ya que tambien es valido.
 
 4. Una vez que el `.env` esté completo nos podremos poner a iniciar el servidor, usando la siguiente línea:
 ```bash
@@ -27,6 +28,17 @@ npm start
 - Si hay algún fallo de la API a la hora de iniciar se debe corroborar que todos las variables estén completas y sean auténticas y utilizables.
 
 Necesita un MongoDB en `mongodb://localhost:27017` la cual se ingresa en el `.env`.
+
+## Tecnologias en uso
+
+- Node
+- Express
+- Faker-js
+- Dotenv
+- Mongoose
+- MongoDB
+- Winston
+- winston-daily-rotate-file
 
 ## Estructura de la API
 
@@ -43,6 +55,64 @@ src/
 └── services/         # se encarga de contener toda la lógica del negocio
 ```
 
+## Logging y monitoreo
+
+### Herramienta utilizada
+Para el registro de eventos se utiliza **Winston**, el cual se encarga de registrar los eventos, en conjunto con **winston-daily-rotate-file** que realiza el trabajo de guardar en archivo los errores que se generan en nuestra API, organizandolo por fecha de creacion. Toda la configuracion de esta herramienta se centralizó en `src/config/logger.js` para no necesitar reescribir el mismo codigo y directamente importar el sistema a donde necesitemos. 
+
+Lo que busca esto es reemplazar los `console.log` sueltos permitiendo clasificar por nivel de importancia y darles un formato común (fecha, nivel y mensaje), centralizando el tipo y la manera que tiene para guardar logs nuestra API, guardando estos en archivo con fecha y hora exacta del mismo para proceder a su posterior consulta. Lo que propone el logger es complementar el manejo de errores, sin modificar las respuestas a los clientes, y registrar los errores internos para poder ser solucionados.
+
+### Niveles de log
+
+| Nivel | Prioridad | Para qué se usa en ShipNow |
+|---|---|---|
+| `fatal` | 0 | Fallas críticas, por ejemplo no poder conectar con MongoDB al iniciar |
+| `error` | 1 | Errores inesperados del servidor, con su stack |
+| `warning` | 2 | Errores esperados o del cliente: ID inválido, ruta inexistente, cantidad inválida |
+| `info` | 3 | Eventos normales: servidor iniciado, conexión a MongoDB, datos mock generados |
+| `http` | 4 | Registro de peticiones HTTP |
+| `debug` | 5 | Información de desarrollo, solo visible en `development` |
+
+Un nivel registra también todos los de número menor: con `info` se ven `fatal`, `error`, `warning` e `info`. En los archivos de log solo se guardan `error` y `fatal`.
+
+### Como probar el logger
+Se dejó creado un endpoint de prueba que genera un log de cada nivel. No es una funcionalidad del negocio, solo sirve para verificar la configuración:
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | /api/logger-test | Genera logs de los 6 niveles |
+
+1. Iniciar el servidor con `npm run dev`.
+2. Abrir `http://localhost:PUERTO/api/logger-test` (donde el `PUERTO` es el que quedó definido en el `.env`).
+3. Revisar la terminal: aparecen los niveles correspondientes al entorno.
+4. Revisar `logs/error-AAAA-MM-DD.log`: deben estar solo los niveles `error` y `fatal`.
+
+### Guardado de logs
+Los errores de tipo `error` y `fatal` son los unicos que se guardan y lo hacen en la carpeta `logs/`, en un archivo por día con el nombre `error-AAAA-MM-DD.log`. Cada línea tiene fecha, nivel y mensaje.
+Para que los archivos no crezcan sin control se aplica una rotación:
+
+- Se crea un archivo nuevo cada día.
+- Si un archivo supera los 5 MB, se rota.
+- Se conservan 14 días de historial.
+- Los archivos viejos se comprimen.
+
+### Archivos ignorados por el Git
+
+Los logs generados por esta aplicacion no se pueden subir a algun repositorio, ya que en el `.gitignore` son ignorados tanto la carpeta `logs/` como los archivos `*.log`.
+
+### Comportamiento segun el entorno
+
+El nivel mínimo del logger depende de la variable `NODE_ENV` del `.env`:
+
+| `NODE_ENV` | Niveles que se muestran en consola |
+|---|---|
+| `development` | `debug`, `http`, `info`, `warning`, `error` y `fatal` |
+| `production` | `info`, `warning`, `error` y `fatal` |
+
+En ambos entornos, el archivo de logs guarda solo `error` y `fatal`.
+
+**(Las evidencias de uso se encontraran detalladas en la seccion de evidencias)**
+
 ## Endpoints
 
 | Método | Ruta | Descripción |
@@ -55,6 +125,7 @@ src/
 | POST / GET / PATCH / DELETE | /api/users | Mismo esquema para usuarios |
 | GET | /api/mocks/users?qty=N | Simulacion de creacion de usuarios |
 | POST | /api/mocks/seed?qty=N | Inserccion de Usuarios, Pedidos y envios a la BBDD (todos son datos no reales) |
+| GET | /api/logger-test | Genera logs de los 6 niveles (solo para pruebas) |
 
 ## Separación y reestructuración de la API.
 Antes de comenzar con este proyecto nos encontrábamos con una API con pocos archivos y cada uno tenía miles tareas para ejecutar. Por lo que se decidió realizarle una limpieza y una reestructuración.
@@ -134,7 +205,7 @@ Todas las pruebas se deben hacer con el servidor corriendo y desde Postman o pro
 | Producto duplicado | `POST /api/products` | 409 | `PRODUCT_ALREADY_EXISTS` | Crear dos productos con el mismo `name`. |
 
 ## Evidencias de Uso.
-### A continuacios se veran, en formato de imagenes, las evidencias de como se verian el uso de las RUTAS mediante el uso del programa de POSTMAN.
+### A continuacion se veran, en formato de imagenes, las evidencias de como se verian el uso de las RUTAS mediante el uso del programa de POSTMAN.
 
 #### Endpoints GET
 
@@ -178,7 +249,7 @@ Todas las pruebas se deben hacer con el servidor corriendo y desde Postman o pro
 ![DELETE /api/products/:id](images/DELETE%20-api-products-id.png)
 
 ## Evidencias de Uso de errores.
-### A continuacios se veran, en formato de imagenes, las evidencias de como se verian los errores que pueden dejar los endpoints teniendo en cuenta el uso del programa de POSTMAN.
+### A continuacion se veran, en formato de imagenes, las evidencias de como se verian los errores que pueden dejar los endpoints teniendo en cuenta el uso del programa de POSTMAN.
 
 - GET /api/mocks/users con numero entero negativo
 ![GET /api/mocks/users?qty=-N](images/GET%20-api-mocks-error.png)
@@ -188,3 +259,22 @@ Todas las pruebas se deben hacer con el servidor corriendo y desde Postman o pro
 
 - POST /api/mocks/seed sin conexión a la base de datos
 ![POST /api/mocks](images/POST%20api-mocks-error.png)
+
+## Evidencias de logs
+### A continuacion se veran, en formato de imagenes, las evidencias de cómo se registran los logs según la variable **NODE_ENV**, detalles de los mismos.
+
+**development**
+- GET /api/logger-test
+![GET /api/logger-test dev](images/GET%20-api-logger-test-development.png)
+
+**production**
+- GET /api/logger-test
+![GET /api/logger-test prod](images/GET%20-api-logger-test-production.png)
+
+**Carpeta de logs**
+- Visualizacion de carpeta de logs
+![Carpeta logs](images/Carpeta%20logs.png)
+
+**Archivo log**
+- Visualizacion de un archivo .log
+![Archivo .log](images/arch%20log.png)
