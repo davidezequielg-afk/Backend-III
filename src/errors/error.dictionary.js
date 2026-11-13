@@ -37,6 +37,10 @@ export const ERROR_DICTIONARY = Object.freeze({
         statusCode: HTTP_STATUS.BAD_REQUEST,
         message: 'Estado inválido'
     },
+    DELIVERY_NOT_FOUND: {
+    statusCode: HTTP_STATUS.NOT_FOUND,
+    message: 'Entrega no encontrada'
+    },
     INVALID_ID: {
         statusCode: HTTP_STATUS.BAD_REQUEST,
         message: 'El ID proporcionado no es válido'
