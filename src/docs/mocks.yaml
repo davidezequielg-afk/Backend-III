@@ -1,0 +1,111 @@
+paths:
+  /api/mocks/users:
+    get:
+      tags:
+        - Mocks
+      summary: Genera usuarios de prueba
+      description: Devuelve usuarios falsos generados con faker. No se guardan en la base de datos.
+      parameters:
+        - in: query
+          name: qty
+          required: false
+          description: Cantidad de usuarios a generar. Entero entre 1 y 100.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: Usuarios de prueba generados
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                              example: David Gonzalez
+                            email:
+                              type: string
+                              example: david.gonzalez@example.com
+                            role:
+                              type: string
+                              enum: [user, courier]
+                              example: courier
+        '400':
+          description: Cantidad inválida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                code: INVALID_QTY
+                message: La cantidad debe ser un numero entero entre el 1 y el 100
+
+  /api/mocks/seed:
+    post:
+      tags:
+        - Mocks
+      summary: Inserta datos de prueba en la base de datos
+      description: Genera e inserta usuarios, pedidos y envíos de prueba. No recibe body, la cantidad se indica por query.
+      parameters:
+        - in: query
+          name: qty
+          required: false
+          description: Cantidad de usuarios a generar. Se crea un pedido y un envío por cada usuario.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '201':
+          description: Datos de prueba insertados
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          usuarios:
+                            type: integer
+                            example: 10
+                          pedidos:
+                            type: integer
+                            example: 10
+                          envios:
+                            type: integer
+                            example: 10
+        '400':
+          description: Cantidad inválida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                code: INVALID_QTY
+                message: La cantidad debe ser un numero entero entre el 1 y el 100
+        '500':
+          description: Falló la inserción en la base de datos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                code: SEED_FAILED
+                message: Error al cargar los datos de prueba del sistema en la base de datos
