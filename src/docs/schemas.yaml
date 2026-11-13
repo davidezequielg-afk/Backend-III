@@ -1,0 +1,40 @@
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        code:
+          type: string
+          example: USER_NOT_FOUND
+        message:
+          type: string
+          example: Usuario no encontrado
+
+    SuccessResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        data:
+          type: object
+
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 607f1f77bcf86cd799439011
+        name:
+          type: string
+          example: David Gonzalez
+        email:
+          type: string
+          example: david@mail.com
+        role:
+          type: string
+          enum: [admin, user, courier]
+          example: user
