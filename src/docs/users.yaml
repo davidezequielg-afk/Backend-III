@@ -1,0 +1,319 @@
+paths:
+  /api/users:
+    post:
+      tags:
+        - Users
+      summary: Crea un usuario
+      description: Crea un usuario con rol user por defecto. El email se guarda en minúsculas.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email]
+              properties:
+                name:
+                  type: string
+                  example: David Gonzalez
+                email:
+                  type: string
+                  example: david@mail.com
+      responses:
+        '201':
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                emailRequerido:
+                  summary: Falta el email
+                  value:
+                    status: error
+                    code: EMAIL_REQUIRED
+                    message: El correo electrónico es obligatorio
+                datosInvalidos:
+                  summary: Falta el nombre
+                  value:
+                    status: error
+                    code: VALIDATION_ERROR
+                    message: Los datos proporcionados no son válidos
+                jsonInvalido:
+                  summary: El body no es un JSON válido
+                  value:
+                    status: error
+                    code: INVALID_JSON
+                    message: JSON inválido
+        '409':
+          description: El usuario ya existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                code: USER_ALREADY_EXISTS
+                message: El usuario ya existe
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                code: INTERNAL_SERVER_ERROR
+                message: Error interno del servidor
+    get:
+      tags:
+        - Users
+      summary: Lista los usuarios
+      description: Devuelve todos los usuarios. Los parámetros de query se usan como filtro.
+      parameters:
+        - in: query
+          name: role
+          required: false
+          description: Filtra por rol
+          schema:
+            type: string
+            enum: [admin, user, courier]
+      responses:
+        '200':
+          description: Lista de usuarios
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/User'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                code: INTERNAL_SERVER_ERROR
+                message: Error interno del servidor
+
+  /api/users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Obtiene un usuario por ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: ID del usuario
+          schema:
+            type: string
+            example: 6aebf185c1f33263a0e648fe
+      responses:
+        '200':
+          description: Usuario encontrado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+        '400':
+          description: ID inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                code: INVALID_ID
+                message: El ID proporcionado no es válido
+        '404':
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                code: USER_NOT_FOUND
+                message: Usuario no encontrado
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                code: INTERNAL_SERVER_ERROR
+                message: Error interno del servidor
+    patch:
+      tags:
+        - Users
+      summary: Actualiza parcialmente un usuario
+      description: Permite modificar el nombre y/o el email. Todos los campos son opcionales.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: ID del usuario
+          schema:
+            type: string
+            example: 6aebf185c1f33263a0e648fe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: David Gonzalez
+                email:
+                  type: string
+                  example: nuevo@mail.com
+      responses:
+        '200':
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+        '400':
+          description: ID o datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                idInvalido:
+                  summary: El ID no es válido
+                  value:
+                    status: error
+                    code: INVALID_ID
+                    message: El ID proporcionado no es válido
+                datosInvalidos:
+                  summary: Los datos no son válidos
+                  value:
+                    status: error
+                    code: VALIDATION_ERROR
+                    message: Los datos proporcionados no son válidos
+                jsonInvalido:
+                  summary: El body no es un JSON válido
+                  value:
+                    status: error
+                    code: INVALID_JSON
+                    message: JSON inválido
+        '404':
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                code: USER_NOT_FOUND
+                message: Usuario no encontrado
+        '409':
+          description: El email ya pertenece a otro usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                code: EMAIL_ALREADY_EXISTS
+                message: El correo electrónico ya existe
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                code: INTERNAL_SERVER_ERROR
+                message: Error interno del servidor
+    delete:
+      tags:
+        - Users
+      summary: Elimina un usuario
+      description: Elimina el usuario y devuelve el usuario eliminado.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: ID del usuario
+          schema:
+            type: string
+            example: 6aebf185c1f33263a0e648fe
+      responses:
+        '200':
+          description: Usuario eliminado
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+        '400':
+          description: ID inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                code: INVALID_ID
+                message: El ID proporcionado no es válido
+        '404':
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                code: USER_NOT_FOUND
+                message: Usuario no encontrado
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                code: INTERNAL_SERVER_ERROR
+                message: Error interno del servidor
