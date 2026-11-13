@@ -4,6 +4,7 @@ import { AppError } from '../errors/AppError.js';
 import userRepository from '../repositories/user.repository.js';
 import orderRepository from '../repositories/order.repository.js';
 import deliveryRepository from '../repositories/delivery.repository.js';
+import logger from '../config/logger.js';
 
 const DEFAULT_QTY = 10;
 const MAX_QTY = 100;
@@ -43,10 +44,10 @@ export const seed = async (qty) => {
             status: faker.helpers.arrayElement(Object.values(DELIVERY_STATUS))
         }))
     );
-    
+    logger.info(`Datos de prueba generados: ${users.length} usuarios, ${orders.length} pedidos, ${deliveries.length} envios`);
         return { usuarios: users.length, pedidos: orders.length, envios: deliveries.length };
     } catch (error) {
-        console.error(error);
+        logger.error(`Fallo al generar datos de prueba: ${error.stack}`);
         throw new AppError('SEED_FAILED');
     }
 }
