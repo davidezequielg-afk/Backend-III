@@ -1,0 +1,21 @@
+paths:
+  /api/logger-test:
+    get:
+      tags:
+        - Logger
+      summary: Genera un log de cada nivel
+      description: Herramienta interna para validar el sistema de logs. No es una funcionalidad de negocio.
+      responses:
+        '200':
+          description: Logs generados en todos los niveles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Logs generados en todos los niveles
