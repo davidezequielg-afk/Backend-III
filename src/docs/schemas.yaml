@@ -27,7 +27,7 @@ components:
       properties:
         _id:
           type: string
-          example: 607f1f77bcf86cd799439011
+          example: 6aebf185c1f33263a0e648fe
         name:
           type: string
           example: David Gonzalez
