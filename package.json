@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "test": "mocha test/**/*.test.js"
+    "test": "cross-env NODE_ENV=test mocha tests/**/*.test.js"
   },
   "dependencies": {
     "@faker-js/faker": "^10.6.0",
