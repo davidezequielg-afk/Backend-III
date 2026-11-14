@@ -1,11 +1,11 @@
 import { expect } from "chai";
-import { api, connectTestDB, clearDB, disconnectDB } from "./helpers.js";
+import { api, connectTestDB, clearDB, disconnectTestDB } from "./helpers.js";
 
 describe('Configuracion de test', () => {
     before(connectTestDB);
     after(async () => {
         await clearDB();
-        await disconnectDB();
+        await disconnectTestDB();
     });
 
     it('responde con 404 con el formato de error en una ruta que no existe', async () => {
