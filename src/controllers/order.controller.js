@@ -1,6 +1,19 @@
 import OrderService from '../services/order.service.js';
 import { RESPONSE_STATUS, HTTP_STATUS } from '../constants/index.js';
 
+export const createOrderController = async (req, res, next) => {
+    try {
+        const { user, items, priority } = req.body || {};
+        const order = await OrderService.createOrder({ user, items, priority });
+        res.status(HTTP_STATUS.CREATED).json({
+            status: RESPONSE_STATUS.SUCCESS,
+            data: order
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const getAllOrdersController = async (req, res, next) => {
     try {
         const orders = await OrderService.getAllOrders(req.query);
