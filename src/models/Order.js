@@ -23,6 +23,5 @@ const orderSchema = new mongoose.Schema({
         default: ORDER_PRIORITY.MEDIUM
   },
         items: { type: [orderItemSchema], default: [] },
-    timestamps: true
-});
+}, { timestamps: true });
 export default mongoose.model('Order', orderSchema);
