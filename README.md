@@ -39,6 +39,8 @@ Necesita un MongoDB en `mongodb://localhost:27017` la cual se ingresa en el `.en
 - MongoDB
 - Winston
 - winston-daily-rotate-file
+- swagger-jsdoc
+- swagger-ui-express
 
 ## Estructura de la API
 
@@ -52,6 +54,7 @@ src/
 ├── repositories/     # conecta la base de datos con el sistema, es el único que debe conectarse entre ambos
 ├── routes/           # conectan cada endpoint con su controlador
 ├── errors/           # errores personalizados (AppError) y diccionario de errores
+├── docs/             # documentación Swagger/OpenAPI: un .yaml por módulo y schemas
 └── services/         # se encarga de contener toda la lógica del negocio
 ```
 
@@ -113,6 +116,38 @@ En ambos entornos, el archivo de logs guarda solo `error` y `fatal`.
 
 **(Las evidencias de uso se encontraran detalladas en la seccion de evidencias)**
 
+## Swagger
+La API esta documentada con **Swagger/OpenAPI** usando `swagger-jsdoc` y `swagger-ui-express`
+
+### Acceso
+1. Para acceder al swagger del servidor se debe iniciar el mismo usando  `npm run dev` (o `npm start`).
+2. Abrir `http://localhost:PUERTO/api/docs`, donde PUERTO es el valor del puerto que utiliza nuestra API
+
+Desde esa página se puede ver cada endpoint y probarlo con el botón **Try it out**.
+
+### Cómo está organizada
+- La configuración general (título, versión, servidor y tags) está en `src/config/swagger.config.js`, separada de la lógica de las rutas.
+- Cada módulo se documenta en su propio archivo dentro de `src/docs/`.
+- Los modelos reutilizables (`User`, `Order`, `OrderItem`, `Delivery`, `ErrorResponse`, `SuccessResponse`) están en `src/docs/schemas.yaml`.
+
+### Módulos documentados
+
+| Tag | Archivo | Qué documenta |
+|---|---|---|
+| Users | `users.yaml` | CRUD de usuarios |
+| Orders | `order.yaml` | Listar, obtener y cambiar el estado de un pedido |
+| Deliveries | `delivery.yaml` | Listar, obtener y cambiar el estado de una entrega |
+| Mocks | `mocks.yaml` | Generar usuarios simulados y cargar datos de prueba |
+| Logger | `logger.yaml` | Endpoint de prueba del sistema de logs (herramienta de validación, no una funcionalidad de negocio) |
+
+Cada endpoint incluye método, ruta, descripción, parámetros, body (si corresponde), respuestas exitosas y errores reales de la API (por ejemplo `INVALID_QTY` en mocks e `INVALID_STATUS` en pedidos y entregas).
+
+### Aclaraciones para probar
+- Para tener datos con los que probar pedidos y entregas, ejecutar primero `POST /api/mocks/seed?qty=N` desde Swagger.
+- Los estados permitidos de un pedido son `pending`, `processing`, `completed` y `cancelled`. Los de una entrega son `pending`, `in_transit`, `delivered` y `cancelled`.
+- Los archivos `.yaml` no se recargan solos con `--watch`: si se edita uno, hay que reiniciar el servidor.
+- `GET /api/logger-test` solo sirve para verificar los logs; no forma parte del negocio.
+
 ## Endpoints
 
 | Método | Ruta | Descripción |
@@ -126,6 +161,12 @@ En ambos entornos, el archivo de logs guarda solo `error` y `fatal`.
 | GET | /api/mocks/users?qty=N | Simulacion de creacion de usuarios |
 | POST | /api/mocks/seed?qty=N | Inserccion de Usuarios, Pedidos y envios a la BBDD (todos son datos no reales) |
 | GET | /api/logger-test | Genera logs de los 6 niveles (solo para pruebas) |
+| GET | /api/orders | Listar pedidos (filtros opcionales `status` y `priority`) |
+| GET | /api/orders/:id | Obtener un pedido |
+| PATCH | /api/orders/:id/status | Cambiar el estado de un pedido |
+| GET | /api/deliveries | Listar entregas |
+| GET | /api/deliveries/:id | Obtener una entrega |
+| PATCH | /api/deliveries/:id/status | Cambiar el estado de una entrega |
 
 ## Separación y reestructuración de la API.
 Antes de comenzar con este proyecto nos encontrábamos con una API con pocos archivos y cada uno tenía miles tareas para ejecutar. Por lo que se decidió realizarle una limpieza y una reestructuración.
@@ -177,12 +218,13 @@ Las reespuestas que encontraremos en esta seccion son:
 | `VALIDATION_ERROR` | 400 | Los datos proporcionados no son válidos | Los datos enviados no cumplen las reglas del modelo (campos obligatorios, valores permitidos). |
 | `PRODUCT_NOT_FOUND` | 404 | Producto no encontrado | No existe un producto con el ID indicado (consulta, actualización o eliminación). |
 | `PRODUCT_ALREADY_EXISTS` | 409 | El producto ya existe | Se intenta crear un producto con un nombre que ya existe. |
-| `ORDER_NOT_FOUND` | 404 | Orden no encontrada | No existe un pedido con el ID indicado. Reservado para futuros endpoints de pedidos; actualmente no se utiliza. |
-| `INVALID_STATUS` | 400 | Estado inválido | El estado enviado no es uno de los permitidos. Reservado para futuras validaciones de estado; actualmente no se utiliza. |
+| `ORDER_NOT_FOUND` | 404 | Orden no encontrada | No existe un pedido con el ID indicado. |
+| `INVALID_STATUS` | 400 | Estado inválido | El estado enviado no es uno de los permitidos. |
 | `INVALID_ID` | 400 | El ID proporcionado no es válido | El ID de la URL no tiene un formato válido de la Base de Datos. |
 | `INVALID_QTY` | 400 | La cantidad debe ser un numero entero entre el 1 y el 100 | En los mocks, `qty` es negativa, cero, decimal, texto o mayor que 100. |
 | `SEED_FAILED` | 500 | Error al cargar los datos de prueba del sistema en la base de datos | Falló la inserción de los datos simulados en la Base de Datos. |
 | `INTERNAL_SERVER_ERROR` | 500 | Error interno del servidor | Error inesperado que no corresponde a ningún caso anterior. |
+| `DELIVERY_NOT_FOUND` | 404 | Entrega no encontrada | No existe una entrega con el ID indicado. |
 
 ### Comprobaciones de los casos inválidos
 Todas las pruebas se deben hacer con el servidor corriendo y desde Postman o programa similar. En cada caso, la respuesta tiene que tener la estructura de error que describimos mas arriba.
