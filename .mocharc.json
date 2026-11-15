@@ -1,0 +1,12 @@
+{
+  "import": ["./tests/setup.js"],
+  "spec": [
+    "tests/health.test.js",
+    "tests/user.test.js",
+    "tests/order.test.js",
+    "tests/deliveries.test.js",
+    "tests/mocks.test.js",
+    "tests/logger.test.js",
+    "tests/swagger.test.js"
+  ]
+}
