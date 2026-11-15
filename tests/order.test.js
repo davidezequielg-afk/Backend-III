@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { api, connectTestDB, clearDB, disconnectTestDB } from "./helpers.js";
 
-describe('Orders', async () => {
+describe('Orders',  () => {
     before(connectTestDB);
     beforeEach(clearDB);
     after(async () => {
@@ -18,7 +18,7 @@ const createOrder = async (user) => {
     return res.body.data;
 };
 
-    describe('POST /api/orders', async () => {
+    describe('POST /api/orders', () => {
         it('devuelve 201 si se crea un pedido para un usuario existente', async () => {
             const user = await createUser();
             const res = await api.post('/api/orders').send({ user: user._id, priority: 'high' });
