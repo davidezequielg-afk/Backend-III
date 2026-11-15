@@ -41,6 +41,9 @@ Necesita un MongoDB en `mongodb://localhost:27017` la cual se ingresa en el `.en
 - winston-daily-rotate-file
 - swagger-jsdoc
 - swagger-ui-express
+- Mocha
+- Chai
+- Supertest
 
 ## Estructura de la API
 
@@ -56,6 +59,8 @@ src/
 ├── errors/           # errores personalizados (AppError) y diccionario de errores
 ├── docs/             # documentación Swagger/OpenAPI: un .yaml por módulo y schemas
 └── services/         # se encarga de contener toda la lógica del negocio
+
+tests/                # tests funcionales (Mocha, Chai y Supertest), fuera de src/
 ```
 
 ## Logging y monitoreo
@@ -148,6 +153,88 @@ Cada endpoint incluye método, ruta, descripción, parámetros, body (si corresp
 - Los archivos `.yaml` no se recargan solos con `--watch`: si se edita uno, hay que reiniciar el servidor.
 - `GET /api/logger-test` solo sirve para verificar los logs; no forma parte del negocio.
 
+## Testing
+
+Los tests funcionales validan los endpoints principales de la API, tanto los casos exitosos como los errores esperados (status HTTP y formato de error `{ status, code, message }`).
+
+### Herramientas utilizadas
+| Herramienta | Para qué se usa |
+|---|---|
+| **Mocha** | Organiza y ejecuta los tests (`describe`, `it`, `before`, `after`) |
+| **Chai** | Hace las comprobaciones (`expect`) |
+| **Supertest** | Hace peticiones HTTP a la app de Express sin abrir un puerto |
+
+La app (`src/app.js`) está separada del arranque del servidor (`src/server.js`), por lo que los tests importan la app directamente.
+
+### Cómo ejecutar los tests
+```bash
+npm test
+```
+La configuración de Mocha (orden de los archivos y archivo de setup) está en `.mocharc.json`.
+La cual tiene la siguiente estructura:
+```json
+{
+  "import": ["./tests/setup.js"],
+  "spec": [
+    "tests/health.test.js",
+    "tests/user.test.js",
+    "tests/order.test.js",
+    "tests/deliveries.test.js",
+    "tests/mocks.test.js",
+    "tests/logger.test.js",
+    "tests/swagger.test.js"
+  ]
+}
+```
+En el caso de agregar mas tests se deben incluir en este archivo de manera obligatoria, ya que de no hacerlo ese o esos tests no apareceran en la terminal. En el caso de querer dejar sin importancia el orden de los tests, no se debe agregar este archivo y en el `package.json` se debe cambiar, en la parte de scripts de
+```json
+{
+    "test": "mocha"
+}
+```
+
+a
+
+```json
+{
+    "test": "mocha --import=./tests/setup.js tests/**/*.test.js"
+}
+```
+
+### Base de datos de testing y variables de entorno
+Los tests **necesitan una base de datos de testing, separada de la de desarrollo**. Usan su propio archivo `.env.test`, que se carga con `tests/setup.js` y tiene prioridad sobre el `.env`.
+
+1. Copiar `.env.test.example` a `.env.test`.
+2. Completar las variables:
+
+```
+PORT=3001
+MONGODB_URI=mongodb://localhost:27017/shipnow_test
+NODE_ENV=test
+```
+
+- `MONGODB_URI` puede ser un MongoDB local o un cluster de Atlas, pero **siempre con una base distinta a la de desarrollo** (por ejemplo `shipnow_test`).
+- Los tests **borran por completo la base de testing**. Por seguridad, si la URI no contiene la palabra `test`, los tests se niegan a ejecutarse.
+- `.env.test` no se sube a Git (está en el `.gitignore`).
+
+### Datos de prueba y limpieza
+- Cada test crea sus propios datos (usuarios, pedidos, entregas) dentro del test; no dependen de datos cargados a mano. Las entregas se generan con `POST /api/mocks/seed`.
+- La base se limpia **antes de cada test** (`beforeEach`) y al terminar cada grupo (`after`), por eso la suite se puede ejecutar varias veces seguidas y los tests no dependen del orden.
+
+### Módulos cubiertos
+
+| Archivo | Módulo | Casos principales |
+|---|---|---|
+| `tests/user.test.js` | Users | Crear, listar y consultar por ID. Errores: email faltante, usuario duplicado, ID inválido, usuario inexistente |
+| `tests/order.test.js` | Orders | Crear, listar, consultar por ID y cambiar estado. Errores: datos incompletos, `INVALID_ID`, `USER_NOT_FOUND`, `ORDER_NOT_FOUND`, `INVALID_STATUS` |
+| `tests/deliveries.test.js` | Deliveries | Listar, consultar por ID y cambiar estado. Errores: `INVALID_ID`, `DELIVERY_NOT_FOUND`, `INVALID_STATUS`, `INVALID_JSON` |
+| `tests/mocks.test.js` | Mocks | Generar usuarios y cargar datos de prueba. Errores: `INVALID_QTY` (negativa, cero, decimal, texto y mayor a 100) |
+| `tests/logger.test.js` | Logger | Respuesta de `GET /api/logger-test` y ruta con método no permitido |
+| `tests/swagger.test.js` | Swagger | La ruta `/api/docs` y que la especificación documente los endpoints principales |
+| `tests/health.test.js` | Rutas | Ruta inexistente (`ROUTE_NOT_FOUND`) |
+
+Los tests de cada recurso comprueban los casos documentados en Swagger, para mantener la documentación y la API coherentes.
+
 ## Endpoints
 
 | Método | Ruta | Descripción |
@@ -164,6 +251,7 @@ Cada endpoint incluye método, ruta, descripción, parámetros, body (si corresp
 | GET | /api/orders | Listar pedidos (filtros opcionales `status` y `priority`) |
 | GET | /api/orders/:id | Obtener un pedido |
 | PATCH | /api/orders/:id/status | Cambiar el estado de un pedido |
+| POST | /api/orders | Crear un pedido |
 | GET | /api/deliveries | Listar entregas |
 | GET | /api/deliveries/:id | Obtener una entrega |
 | PATCH | /api/deliveries/:id/status | Cambiar el estado de una entrega |
