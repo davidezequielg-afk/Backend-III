@@ -30,6 +30,13 @@ class UserRepository {
     async insertMany(users){
         return User.insertMany(users);
     }
+    async addDocument(id, metadata) {
+        return User.findByIdAndUpdate(
+            id,
+            { $push: { documents: metadata } },
+            { new: true, runValidators: true, projection: DEFAULT_PROJECTION }
+        );
+    }
 }
 
 export default new UserRepository();
