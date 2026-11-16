@@ -25,7 +25,7 @@ class DeliveryRepository {
     async insertMany(deliveries) {
         return Delivery.insertMany(deliveries);
     }
-        async addReceipt(id, metadata) {
+    async addReceipt(id, metadata) {
         return Delivery.findByIdAndUpdate(
             id,
             { $push: { receipts: metadata } },
