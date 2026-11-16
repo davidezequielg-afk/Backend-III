@@ -38,6 +38,11 @@ components:
           type: string
           enum: [admin, user, courier]
           example: user
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileMetadata'
+
 
     OrderItem:
       type: object
@@ -104,6 +109,10 @@ components:
           type: string
           enum: [pending, in_transit, delivered, cancelled]
           example: in_transit
+        receipts:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileMetadata'
         createdAt:
           type: string
           format: date-time

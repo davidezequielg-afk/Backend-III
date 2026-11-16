@@ -176,3 +176,104 @@ paths:
                 status: error
                 code: INTERNAL_SERVER_ERROR
                 message: Error interno del servidor
+
+  /api/deliveries/{id}/receipts:
+    post:
+      tags:
+        - Deliveries
+      summary: Sube un comprobante de una entrega
+      description: Recibe un archivo (PDF, JPG o PNG, máximo 2 MB), lo guarda en el servidor y registra sus metadatos en la entrega. El tipo de documento queda fijo como receipt.
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: ID de la entrega
+          schema:
+            type: string
+            example: 6af0df240fca0b10008a87e1
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Archivo a subir. El campo debe llamarse file
+      responses:
+        '201':
+          description: Comprobante cargado y asociado a la entrega
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Delivery'
+        '400':
+          description: Archivo o datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                fileRequired:
+                  summary: No se envió el archivo
+                  value:
+                    status: error
+                    code: FILE_REQUIRED
+                    message: El archivo es obligatorio
+                invalidFileType:
+                  summary: El tipo de archivo no está permitido
+                  value:
+                    status: error
+                    code: INVALID_FILE_TYPE
+                    message: El tipo de archivo no está permitido. Solo se aceptan PDF, JPG y PNG
+                invalidFileField:
+                  summary: El archivo no se envió en el campo file
+                  value:
+                    status: error
+                    code: INVALID_FILE_FIELD
+                    message: El campo del archivo no es el esperado. Debe enviarse en el campo "file"
+                invalidId:
+                  summary: El ID de la entrega no es válido
+                  value:
+                    status: error
+                    code: INVALID_ID
+                    message: El ID proporcionado no es válido
+        '404':
+          description: La entrega no existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                code: DELIVERY_NOT_FOUND
+                message: Entrega no encontrada
+        '413':
+          description: El archivo supera el tamaño máximo de 2 MB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                code: FILE_TOO_LARGE
+                message: El archivo supera el tamaño máximo permitido de 2 MB
+        '500':
+          description: Error al guardar el archivo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                code: FILE_SAVE_FAILED
+                message: Error al guardar el archivo
