@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import { config } from './env.config.js';
 import { FILE_RULES } from '../constants/index.js';
 import { AppError } from '../errors/AppError.js';
+import logger from './logger.js';
 
 const createUploader = (folder) => {
     const destination = path.resolve(config.UPLOADS_DIR, folder);
@@ -20,6 +21,7 @@ const createUploader = (folder) => {
 
     const fileFilter = (req, file, cb) => {
         if (!FILE_RULES.ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+            logger.warning(`Intento de subir un archivo no permitido: ${file.originalname} (${file.mimetype})`)
             return cb(new AppError('INVALID_FILE_TYPE'));
         }
         cb(null, true);
