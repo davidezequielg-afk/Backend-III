@@ -2,6 +2,7 @@ import UserRepository from '../repositories/user.repository.js';
 import { AppError } from '../errors/AppError.js';
 import { DOCUMENT_TYPES } from '../constants/index.js';
 import { buildFileMetadata, removeFile } from '../utils/file.utils.js';
+import logger from '../config/logger.js';
 
 class UserService {
     async createUser(data) {
@@ -54,7 +55,9 @@ class UserService {
             if (!user) {
                 throw new AppError('USER_NOT_FOUND');
             }
-            return await UserRepository.addDocument(userId, buildFileMetadata(file, documentType));
+            const updatedUser = await UserRepository.addDocument(userId, buildFileMetadata(file, documentType));
+            logger.info(`Documento cargado: usuario ${userId}, tipo ${documentType}, archivo ${file.filename} (${file.size} bytes)`);
+            return updatedUser;
         } catch (error) {
             await removeFile(file.path);
             if (error instanceof AppError || error.name === 'CastError') {
