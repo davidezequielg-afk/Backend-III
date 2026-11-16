@@ -1,6 +1,7 @@
 import deliveryRepository from '../repositories/delivery.repository.js';
 import { AppError } from '../errors/AppError.js';
-import { DELIVERY_STATUS } from '../constants/index.js';
+import { DELIVERY_STATUS, RECEIPT_DOCUMENT_TYPE } from '../constants/index.js';
+import { buildFileMetadata, removeFile } from '../utils/file.utils.js';
 
 class DeliveryService {
     async getAllDeliveries(filter = {}) {
@@ -26,6 +27,25 @@ class DeliveryService {
         }
         return updatedDelivery;
     }
+        async addReceipt(deliveryId, file) {
+        if (!file) {
+            throw new AppError('FILE_REQUIRED');
+        }
+        try {
+            const delivery = await deliveryRepository.getById(deliveryId);
+            if (!delivery) {
+                throw new AppError('DELIVERY_NOT_FOUND');
+            }
+            return await deliveryRepository.addReceipt(deliveryId, buildFileMetadata(file, RECEIPT_DOCUMENT_TYPE));
+        } catch (error) {
+            await removeFile(file.path);
+            if (error instanceof AppError || error.name === 'CastError') {
+                throw error;
+            }
+            throw new AppError('FILE_SAVE_FAILED');
+        }
+    }
+
 }
 
 export default new DeliveryService();
