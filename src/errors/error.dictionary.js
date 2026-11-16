@@ -64,5 +64,29 @@ export const ERROR_DICTIONARY = Object.freeze({
     INVALID_JSON: {
         statusCode: HTTP_STATUS.BAD_REQUEST,
         message: 'JSON inválido'
+    },
+    FILE_REQUIRED: {
+        statusCode: HTTP_STATUS.BAD_REQUEST,
+        message: 'El archivo es obligatorio'
+    },
+    INVALID_FILE_TYPE: {
+        statusCode: HTTP_STATUS.BAD_REQUEST,
+        message: 'El tipo de archivo no está permitido. Solo se aceptan formatos PDF, JPG y PNG'
+    },
+    FILE_TOO_LARGE: {
+        statusCode: HTTP_STATUS.PAYLOAD_TOO_LARGE,
+        message: 'El archivo es demasiado grande. El tamaño máximo permitido es de 2 MB'
+    },
+    INVALID_FILE_FIELD: {
+        statusCode: HTTP_STATUS.BAD_REQUEST,
+        message: 'El campo del archivo no es válido. Debe ser al campo "file"'
+    },
+    INVALID_DOCUMENT_TYPE: {
+        statusCode: HTTP_STATUS.BAD_REQUEST,
+        message: 'El tipo de documento no es válido'
+    },
+    FILE_SAVE_FAILED: {
+        statusCode: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        message: 'Error al guardar el archivo'
     }
 });
