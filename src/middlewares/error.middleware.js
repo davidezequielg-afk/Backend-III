@@ -1,3 +1,4 @@
+import multer from 'multer';
 import { RESPONSE_STATUS } from '../constants/index.js';
 import { AppError } from '../errors/AppError.js';
 import logger from '../config/logger.js';
@@ -23,6 +24,15 @@ export const errorHandler = (err, req, res, next) => {
     }
     else if (err.type === 'entity.parse.failed') {
         error = new AppError('INVALID_JSON');
+    }
+    else if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+            error = new AppError('FILE_TOO_LARGE');
+        } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+            error = new AppError('INVALID_FILE_FIELD');
+        } else {
+            error = new AppError('VALIDATION_ERROR');
+        }
     }
     else {
         error = new AppError('INTERNAL_SERVER_ERROR');

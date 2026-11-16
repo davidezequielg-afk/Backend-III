@@ -39,13 +39,13 @@ export const DELIVERY_STATUS = Object.freeze({
     DELIVERED: 'delivered',
     CANCELLED: 'cancelled'
 });
-export const TYPES = Object.freeze({
+export const DOCUMENT_TYPES = Object.freeze({
     DNI: 'dni',
     LICENSE: 'license',
     ADDRESS_PROOF: 'address_proof',
     OTHER: 'other'
 });
-export const FILES_RULES = Object.freeze({
-    ALLOWED_MINE_RULES: ['application/pdf', 'image/jped', 'image/png'],
-    MAX_SICE: 2*1024*1024
+export const FILE_RULES = Object.freeze({
+    ALLOWED_MIME_TYPES: ['application/pdf', 'image/jpeg', 'image/png'],
+    MAX_SIZE: 2*1024*1024
 }); 
