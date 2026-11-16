@@ -63,6 +63,7 @@ class UserService {
             if (error instanceof AppError || error.name === 'CastError') {
                 throw error;
             }
+            logger.error(`Error al guardar el documento del usuario ${userId}: ${error.stack}`);
             throw new AppError('FILE_SAVE_FAILED');
         }
     }
