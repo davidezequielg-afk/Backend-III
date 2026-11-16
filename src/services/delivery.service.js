@@ -27,7 +27,7 @@ class DeliveryService {
         }
         return updatedDelivery;
     }
-        async addReceipt(deliveryId, file) {
+    async addReceipt(deliveryId, file) {
         if (!file) {
             throw new AppError('FILE_REQUIRED');
         }

@@ -7,6 +7,6 @@ const router = Router();
 router.get('/', getAllDeliveriesController);
 router.get('/:id', getDeliveryByIdController);
 router.patch('/:id/status', updateDeliveryStatusController);
-router.post('/:id/receipt', uploadReceipt, uploadDeliveryReceiptController);
+router.post('/:id/receipts', uploadReceipt, uploadDeliveryReceiptController);
 
 export default router;
