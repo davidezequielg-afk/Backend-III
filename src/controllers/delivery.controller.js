@@ -37,3 +37,16 @@ export const updateDeliveryStatusController = async (req, res, next) => {
         next(error);
     }
 };
+
+export const uploadDeliveryReceiptController = async (req, res, next) => {
+    try {
+        const delivery = await deliveryService.addReceipt(req.params.id, req.file);
+        res.status(HTTP_STATUS.CREATED).json({
+            status: RESPONSE_STATUS.SUCCESS,
+            data: delivery
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+};
