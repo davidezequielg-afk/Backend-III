@@ -49,3 +49,4 @@ export const FILE_RULES = Object.freeze({
     ALLOWED_MIME_TYPES: ['application/pdf', 'image/jpeg', 'image/png'],
     MAX_SIZE: 2*1024*1024
 }); 
+export const RECEIPT_DOCUMENT_TYPE = 'receipt';
