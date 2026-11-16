@@ -113,3 +113,36 @@ components:
           format: date-time
           example: 2026-11-08T20:44:20.453Z
 
+    FileMetadata:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 6af0df240fca0b10008a87e9
+        originalName:
+          type: string
+          description: Nombre con el que el cliente subió el archivo
+          example: dni-frente.pdf
+        fileName:
+          type: string
+          description: Nombre generado por el servidor
+          example: 1794801406211-25822fc5-54e2-445e-9850-24cef378bd4e.pdf
+        path:
+          type: string
+          description: Ruta relativa dentro del servidor
+          example: uploads/documents/1794801406211-25822fc5-54e2-445e-9850-24cef378bd4e.pdf
+        mimeType:
+          type: string
+          example: application/pdf
+        size:
+          type: integer
+          description: Tamaño en bytes
+          example: 184320
+        documentType:
+          type: string
+          description: Tipo de documento. En los comprobantes de entrega es siempre receipt
+          example: dni
+        uploadedAt:
+          type: string
+          format: date-time
+          example: 2026-11-16T03:56:46.264Z
