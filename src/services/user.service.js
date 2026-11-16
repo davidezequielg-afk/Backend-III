@@ -1,5 +1,7 @@
 import UserRepository from '../repositories/user.repository.js';
 import { AppError } from '../errors/AppError.js';
+import { DOCUMENT_TYPES } from '../constants/index.js';
+import { buildFileMetadata, removeFile } from '../utils/file.utils.js';
 
 class UserService {
     async createUser(data) {
@@ -40,7 +42,27 @@ class UserService {
         }
         return updatedUser;
     }
-
+    async addDocument(userId, file, documentType) {
+        if (!file) {
+            throw new AppError('FILE_REQUIRED');
+        }
+        try {
+            if (!Object.values(DOCUMENT_TYPES).includes(documentType)) {
+                throw new AppError('INVALID_DOCUMENT_TYPE');
+            }
+            const user = await UserRepository.getById(userId);
+            if (!user) {
+                throw new AppError('USER_NOT_FOUND');
+            }
+            return await UserRepository.addDocument(userId, buildFileMetadata(file, documentType));
+        } catch (error) {
+            await removeFile(file.path);
+            if (error instanceof AppError || error.name === 'CastError') {
+                throw error;
+            }
+            throw new AppError('FILE_SAVE_FAILED');
+        }
+    }
     async deleteUser(id) {
         const deletedUser = await UserRepository.delete(id);
         if (!deletedUser) {
