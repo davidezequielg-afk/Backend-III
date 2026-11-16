@@ -44,6 +44,7 @@ Necesita un MongoDB en `mongodb://localhost:27017` la cual se ingresa en el `.en
 - Mocha
 - Chai
 - Supertest
+- Multer
 
 ## Estructura de la API
 
@@ -58,9 +59,12 @@ src/
 ├── routes/           # conectan cada endpoint con su controlador
 ├── errors/           # errores personalizados (AppError) y diccionario de errores
 ├── docs/             # documentación Swagger/OpenAPI: un .yaml por módulo y schemas
+├── utils/            # funciones de apoyo (armar los metadatos de un archivo y borrarlos)
 └── services/         # se encarga de contener toda la lógica del negocio
 
 tests/                # tests funcionales (Mocha, Chai y Supertest), fuera de src/
+uploads/              # archivos cargados: documents/ y receipts (esta carpeta y sus subcarpetas no se suben al repositorio ya que son locales para cada usuario)
+
 ```
 
 ## Logging y monitoreo
@@ -120,6 +124,60 @@ El nivel mínimo del logger depende de la variable `NODE_ENV` del `.env`:
 En ambos entornos, el archivo de logs guarda solo `error` y `fatal`.
 
 **(Las evidencias de uso se encontraran detalladas en la seccion de evidencias)**
+
+## Carga de archivos
+
+La API permite subir documentos de usuarios y comprobantes de entrega usando **Multer**. El archivo se guarda en el servidor y en la base de datos se registran **solo sus metadatos** (nunca el archivo).
+
+### Endpoints
+
+| Método | Ruta  Campos (`multipart/form-data`) | Descripción |
+|---|---|---|---|
+| POST | `/api/users/:id/documents` | `file` (archivo), `documentType` (texto) | Sube un documento y lo registra en el usuario |
+| POST | `/api/deliveries/:id/receipts` | `file` (archivo) | Sube un comprobante y lo registra en la entrega |
+
+- El archivo debe enviarse siempre en el campo **`file`**.
+- Tipos de documento válidos (`documentType`): `dni`, `license`, `address_proof`, `other`. Los comprobantes tienen siempre el tipo `receipt`.
+
+### Reglas de validación
+- Tipos de archivo permitidos: PDF, JPG y PNG.
+- Tamaño máximo: 2 MB.
+- Un solo archivo por petición.
+- La entidad (usuario o entrega) debe existir.
+
+### Dónde se guardan los archivos
+```
+uploads/
+├── documents/   # documentos de usuarios
+└── receipts/    # comprobantes de entrega
+```
+- Las carpetas se crean solas al iniciar la aplicación.
+- La carpeta `uploads/` está en el `.gitignore`: los archivos subidos no van al repositorio.
+- La ubicación se puede cambiar con la variable de entorno opcional `UPLOADS_DIR` (por defecto `uploads`).
+- Los archivos se guardan con un nombre generado (fecha + identificador único), para que nunca se pisen.
+
+### Metadatos que se guardan en la base
+`originalName`, `fileName`, `path`, `mimeType`, `size`, `documentType` y `uploadedAt`, dentro de `documents` (usuarios) y `receipts` (entregas).
+
+### Errores específicos
+
+| Código | Estado HTTP | Cuándo ocurre |
+|---|---|---|
+| `FILE_REQUIRED` | 400 | No se envió ningún archivo |
+| `INVALID_FILE_TYPE` | 400 | El archivo no es PDF, JPG ni PNG |
+| `FILE_TOO_LARGE` | 413 | El archivo supera los 2 MB |
+| `INVALID_FILE_FIELD` | 400 | El archivo no se envió en el campo `file` |
+| `INVALID_DOCUMENT_TYPE` | 400 | El tipo de documento falta o no es válido |
+| `USER_NOT_FOUND` / `DELIVERY_NOT_FOUND` | 404 | La entidad no existe |
+| `FILE_SAVE_FAILED` | 500 | Falló el guardado del archivo |
+
+Si una carga falla después de que el archivo se guardó, el servidor lo **elimina** para no dejar archivos sin asociar.
+
+### Logs
+Se registran la carga exitosa de un documento, la asociación de un comprobante, los intentos de subir un tipo de archivo no permitido y los errores al guardar.
+
+### Limitación conocida
+El tipo de archivo se valida con el `mimetype` que informa el cliente. No se inspecciona el contenido real del archivo.
 
 ## Swagger
 La API esta documentada con **Swagger/OpenAPI** usando `swagger-jsdoc` y `swagger-ui-express`
@@ -211,6 +269,7 @@ Los tests **necesitan una base de datos de testing, separada de la de desarrollo
 PORT=3001
 MONGODB_URI=mongodb://localhost:27017/shipnow_test
 NODE_ENV=test
+UPLOADS_DIR=uploads_test
 ```
 
 - `MONGODB_URI` puede ser un MongoDB local o un cluster de Atlas, pero **siempre con una base distinta a la de desarrollo** (por ejemplo `shipnow_test`).
@@ -232,6 +291,10 @@ NODE_ENV=test
 | `tests/logger.test.js` | Logger | Respuesta de `GET /api/logger-test` y ruta con método no permitido |
 | `tests/swagger.test.js` | Swagger | La ruta `/api/docs` y que la especificación documente los endpoints principales |
 | `tests/health.test.js` | Rutas | Ruta inexistente (`ROUTE_NOT_FOUND`) |
+| `tests/uploads.test.js` | Carga de archivos | Documentos de usuario y comprobantes. Errores: `FILE_REQUIRED`, `INVALID_FILE_TYPE`, `INVALID_FILE_FIELD`, `FILE_TOO_LARGE`, `INVALID_DOCUMENT_TYPE`, `INVALID_ID` y entidad inexistente. También se comprueba que no queden archivos huérfanos |
+
+**Aclaracion importante sobre los uploads:** 
+- `UPLOADS_DIR` debe apuntar a una carpeta que contenga `test` en el nombre: los tests guardan ahí los archivos de prueba y los borran al terminar. Si falta o no contiene `test`, los tests de carga fallan por seguridad.
 
 Los tests de cada recurso comprueban los casos documentados en Swagger, para mantener la documentación y la API coherentes.
 
@@ -255,6 +318,8 @@ Los tests de cada recurso comprueban los casos documentados en Swagger, para man
 | GET | /api/deliveries | Listar entregas |
 | GET | /api/deliveries/:id | Obtener una entrega |
 | PATCH | /api/deliveries/:id/status | Cambiar el estado de una entrega |
+| POST | /api/users/:id/documents | Subir un documento de un usuario (multipart/form-data) |
+| POST | /api/deliveries/:id/receipts | Subir un comprobante de una entrega (multipart/form-data) |
 
 ## Separación y reestructuración de la API.
 Antes de comenzar con este proyecto nos encontrábamos con una API con pocos archivos y cada uno tenía miles tareas para ejecutar. Por lo que se decidió realizarle una limpieza y una reestructuración.
