@@ -1,5 +1,6 @@
 import { Router } from 'express'
-import { createUserController, getAllUsersController, getUserByIdController, updateUserController, deleteUserController } from '../controllers/user.controller.js'
+import { createUserController, getAllUsersController, getUserByIdController, updateUserController, deleteUserController, uploadUserDocumentController } from '../controllers/user.controller.js'
+import { uploadDocument } from '../config/multer.config.js'
 
 const router = Router()
 
@@ -8,5 +9,6 @@ router.get('/', getAllUsersController)
 router.get('/:id', getUserByIdController)
 router.patch('/:id', updateUserController)
 router.delete('/:id', deleteUserController)
+router.post('/:id/documents', uploadDocument, uploadUserDocumentController)
 
 export default router
