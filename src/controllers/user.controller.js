@@ -47,3 +47,13 @@ export const deleteUserController = async (req, res, next) => {
         next(error);
     }
 };
+
+export const uploadUserDocumentController = async (req, res, next) => {
+    try {
+        const { documentType } = req.body || {};
+        const user = await UserService.addDocument(req.params.id, req.file, documentType);
+        res.status(HTTP_STATUS.CREATED).json({ status: RESPONSE_STATUS.SUCCESS, data: user });
+    } catch (error) {
+        next(error);
+    }
+};
