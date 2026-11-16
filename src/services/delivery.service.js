@@ -2,6 +2,7 @@ import deliveryRepository from '../repositories/delivery.repository.js';
 import { AppError } from '../errors/AppError.js';
 import { DELIVERY_STATUS, RECEIPT_DOCUMENT_TYPE } from '../constants/index.js';
 import { buildFileMetadata, removeFile } from '../utils/file.utils.js';
+import logger from '../config/logger.js';
 
 class DeliveryService {
     async getAllDeliveries(filter = {}) {
@@ -36,12 +37,15 @@ class DeliveryService {
             if (!delivery) {
                 throw new AppError('DELIVERY_NOT_FOUND');
             }
-            return await deliveryRepository.addReceipt(deliveryId, buildFileMetadata(file, RECEIPT_DOCUMENT_TYPE));
+            const updatedDelivery = await deliveryRepository.addReceipt(deliveryId, buildFileMetadata(file, RECEIPT_DOCUMENT_TYPE));
+            logger.info(`Comprobante asociado a la entrega ${deliveryId}: archivo ${file.filename} (${file.size} bytes)`);
+            return updatedDelivery;
         } catch (error) {
             await removeFile(file.path);
             if (error instanceof AppError || error.name === 'CastError') {
                 throw error;
             }
+            logger.error(`Error al guardar el comprobante de la entrega ${deliveryId}: ${error.stack}`);
             throw new AppError('FILE_SAVE_FAILED');
         }
     }
