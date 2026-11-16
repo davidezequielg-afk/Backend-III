@@ -25,6 +25,14 @@ class DeliveryRepository {
     async insertMany(deliveries) {
         return Delivery.insertMany(deliveries);
     }
+        async addReceipt(id, metadata) {
+        return Delivery.findByIdAndUpdate(
+            id,
+            { $push: { receipts: metadata } },
+            { new: true, runValidators: true, projection: DEFAULT_PROJECTION }
+        );
+    }
+
 }
 
 export default new DeliveryRepository();
