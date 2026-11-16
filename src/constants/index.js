@@ -10,6 +10,7 @@ export const HTTP_STATUS = Object.freeze({
     FORBIDDEN: 403,
     NOT_FOUND: 404,
     CONFLICT: 409,
+    PAYLOAD_TOO_LARGE: 413,
     INTERNAL_SERVER_ERROR: 500
 });
 export const USER_ROLES = Object.freeze({
@@ -38,3 +39,13 @@ export const DELIVERY_STATUS = Object.freeze({
     DELIVERED: 'delivered',
     CANCELLED: 'cancelled'
 });
+export const TYPES = Object.freeze({
+    DNI: 'dni',
+    LICENSE: 'license',
+    ADDRESS_PROOF: 'address_proof',
+    OTHER: 'other'
+});
+export const FILES_RULES = Object.freeze({
+    ALLOWED_MINE_RULES: ['application/pdf', 'image/jped', 'image/png'],
+    MAX_SICE: 2*1024*1024
+}); 
