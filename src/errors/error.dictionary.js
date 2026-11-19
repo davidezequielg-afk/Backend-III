@@ -91,6 +91,10 @@ export const ERROR_DICTIONARY = Object.freeze({
     },
     INVALID_PAGINATION: {
         statusCode: HTTP_STATUS.BAD_REQUEST,
-        message: 'Los parámetros de paginación no son válidos. page debe entero mayor a 0 y limit entero entre 1 y 100'
+        message: 'Los parámetros de paginación no son válidos. page debe ser un numero entero mayor a 0 y limit debe ser un numero entero entre 1 y 100'
+    },
+    INVALID_FILTERS: {
+        statusCode: HTTP_STATUS.BAD_REQUEST,
+        message: 'Los filtros proporcionados no son válidos'
     }
 });
