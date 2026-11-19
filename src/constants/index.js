@@ -50,3 +50,8 @@ export const FILE_RULES = Object.freeze({
     MAX_SIZE: 2*1024*1024
 }); 
 export const RECEIPT_DOCUMENT_TYPE = 'receipt';
+export const PAGINATION = Object.freeze({
+    DEFAULT_PAGE: 1,
+    DEFAULT_LIMIT: 10,
+    MAX_LIMIT: 100
+});

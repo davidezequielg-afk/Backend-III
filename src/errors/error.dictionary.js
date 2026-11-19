@@ -88,5 +88,9 @@ export const ERROR_DICTIONARY = Object.freeze({
     FILE_SAVE_FAILED: {
         statusCode: HTTP_STATUS.INTERNAL_SERVER_ERROR,
         message: 'Error al guardar el archivo'
+    },
+    INVALID_PAGINATION: {
+        statusCode: HTTP_STATUS.BAD_REQUEST,
+        message: 'Los parámetros de paginación no son válidos. page debe entero mayor a 0 y limit entero entre 1 y 100'
     }
 });
