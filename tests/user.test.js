@@ -189,6 +189,11 @@ describe('Users', () => {
                 expect(res.body).to.have.property('code', 'INVALID_PAGINATION');
             }
         });
+        it('devuelve 400 INVALID_FILTERS si el filtro intenta usar un operador', async () => {
+            const res = await api.get('/api/users?role[$ne]=admin');
+            expect(res.status).to.equal(400);
+            expect(res.body).to.have.property('code', 'INVALID_FILTERS');
+});
     });
 
     describe('GET /api/users/:id', () => {
