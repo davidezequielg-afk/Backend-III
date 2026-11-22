@@ -7,9 +7,12 @@ class UserRepository {
         const user = await User.create(data);
         return user;
     }
-    async getAll(filter = {}) {
-        const users = await User.find(filter).select(DEFAULT_PROJECTION).lean();
-        return users;
+    async getAll(filter = {}, { limit, skip } = {}) {
+        const [users, count] = await Promise.all([
+            User.find(filter).select(DEFAULT_PROJECTION).lean().sort({ _id: -1 }).limit(limit).skip(skip),
+            User.countDocuments(filter)
+        ]);
+        return { items: users, total: count };
     }
     async getById(id) {
         const user = await User.findById( id ).select(DEFAULT_PROJECTION);
