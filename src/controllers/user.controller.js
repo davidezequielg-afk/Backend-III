@@ -13,8 +13,8 @@ export const createUserController = async (req, res, next) => {
 
 export const getAllUsersController = async (req, res, next) => {
     try {
-        const users = await UserService.getAllUsers(req.query);
-        res.status(HTTP_STATUS.OK).json({ status: RESPONSE_STATUS.SUCCESS, data: users });
+        const { items, pagination } = await UserService.getAllUsers(req.query);
+        res.status(HTTP_STATUS.OK).json({ status: RESPONSE_STATUS.SUCCESS, data: items, pagination });
     } catch (error) {
         next(error);
     }

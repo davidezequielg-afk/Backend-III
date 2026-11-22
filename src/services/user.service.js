@@ -1,4 +1,5 @@
 import UserRepository from '../repositories/user.repository.js';
+import { parsePagination, buildPagination, pickFilters} from '../utils/pagination.util.js';
 import { AppError } from '../errors/AppError.js';
 import { DOCUMENT_TYPES } from '../constants/index.js';
 import { buildFileMetadata, removeFile } from '../utils/file.utils.js';
@@ -16,8 +17,12 @@ class UserService {
         }
         return UserRepository.create({ ...data, email: emailNormalized });
     }
-    async getAllUsers(filter = {}) {
-        return UserRepository.getAll(filter);
+    async getAllUsers(query = {}) {
+        const { page, limit, skip } = parsePagination(query);
+        const filters = pickFilters(query, ['role']);
+        const {items, total} = await UserRepository.getAll(filters, { limit, skip });
+        const pagination = buildPagination({ page, limit, total });
+        return { items, pagination };
     }
     async getUserById(id) {
         const user = await UserRepository.getById(id);
