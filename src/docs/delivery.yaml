@@ -4,7 +4,7 @@ paths:
       tags:
         - Deliveries
       summary: Lista las entregas
-      description: Devuelve todas las entregas con los datos del pedido. Los parámetros de query se usan como filtro.
+      description: Devuelve las entregas paginadas, de la más nueva a la más antigua, con los datos del pedido. Solo se acepta el filtro status; cualquier otro parámetro se ignora.
       parameters:
         - in: query
           name: status
@@ -13,6 +13,8 @@ paths:
           schema:
             type: string
             enum: [pending, in_transit, delivered, cancelled]
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
       responses:
         '200':
           description: Lista de entregas
@@ -27,6 +29,27 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/Delivery'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+        '400':
+          description: Parámetros de paginación o filtros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                paginacionInvalida:
+                  summary: page o limit no son válidos
+                  value:
+                    status: error
+                    code: INVALID_PAGINATION
+                    message: Los parámetros de paginación no son válidos. page debe ser un numero entero mayor a 0 y limit debe ser un numero entero entre 1 y 100
+                filtroInvalido:
+                  summary: El filtro no es un texto simple
+                  value:
+                    status: error
+                    code: INVALID_FILTERS
+                    message: Los filtros proporcionados no son válidos
         '500':
           description: Error interno del servidor
           content:
