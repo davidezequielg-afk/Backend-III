@@ -6,11 +6,9 @@ const levels = { fatal: 0, error: 1, warning: 2, info: 3, http: 4, debug: 5 };
 const colors = { fatal: 'bold red', error: 'red', warning: 'yellow', info: 'green', http: 'cyan', debug: 'blue' };
 winston.addColors(colors);
 
-const isProduction = config.NODE_ENV === 'production';
-
 const logger = winston.createLogger({
     levels,
-    level: isProduction ? 'info' : 'debug',
+    level: config.LOG_LEVEL,
     transports: [
         new winston.transports.Console({
             format: winston.format.combine(
