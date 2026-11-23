@@ -7,8 +7,18 @@ class DeliveryRepository {
         const delivery = new Delivery(data);
         return delivery.save();
     }
-    async getAll(filter = {}) {
-        return Delivery.find(filter).select(DEFAULT_PROJECTION).populate('order').lean();
+    async getAll(filter = {}, { skip, limit } = {}) {
+        const [deliveries, count] = await Promise.all([
+            Delivery.find(filter)
+                .populate('order')
+                .select(DEFAULT_PROJECTION)
+                .sort({ _id: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            Delivery.countDocuments(filter)
+    ]);
+        return { items: deliveries, total: count }; 
     }
     async getById(id) {
         return Delivery.findById(id).select(DEFAULT_PROJECTION).populate('order').lean();

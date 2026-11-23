@@ -3,15 +3,15 @@ import { HTTP_STATUS, RESPONSE_STATUS } from '../constants/index.js';
 
 export const getAllDeliveriesController = async (req, res, next) => {
     try {
-        const deliveries = await deliveryService.getAllDeliveries(req.query);
-        res.status(HTTP_STATUS.OK).json({
-            status: RESPONSE_STATUS.SUCCESS,
-            data: deliveries
+        const { items, pagination } = await deliveryService.getAllDeliveries(req.query);
+        res.status(HTTP_STATUS.OK).json({ 
+            status: RESPONSE_STATUS.SUCCESS, 
+            data: items, pagination 
         });
     } catch (error) {
         next(error);
     }
-};
+};  
 
 export const getDeliveryByIdController = async (req, res, next) => {
     try {

@@ -3,12 +3,16 @@ import { AppError } from '../errors/AppError.js';
 import { DELIVERY_STATUS, RECEIPT_DOCUMENT_TYPE } from '../constants/index.js';
 import { buildFileMetadata, removeFile } from '../utils/file.utils.js';
 import logger from '../config/logger.js';
+import { parsePagination, buildPagination, pickFilters } from '../utils/pagination.util.js';
 
 class DeliveryService {
-    async getAllDeliveries(filter = {}) {
-        const deliveries = await deliveryRepository.getAll(filter);
-        return deliveries;
-    }
+    async getAllDeliveries(query = {}) {
+        const { page, limit, skip } = parsePagination(query);
+        const filters = pickFilters(query, ['status']);
+        const { items, total } = await deliveryRepository.getAll(filters, { skip, limit });
+        const pagination = buildPagination({ page, limit, total });
+        return { items, pagination };
+    }   
 
     async getDeliveryById(id) {
         const delivery = await deliveryRepository.getById(id);
