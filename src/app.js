@@ -23,9 +23,6 @@ app.use('/api/products', productsRouter)
 app.use('/api/orders', orderRouter)
 app.use('/api/deliveries', deliveryRouter)
 app.use('/api/health', healthRouter)
-app.use(routeNotFoundHandler);
-app.use(errorHandler);
-
 if (!isProduction) {
     app.use('/api/mocks', mocksRouter)
     app.use('/api/logger-test', loggerRouter)
@@ -33,6 +30,8 @@ if (!isProduction) {
 if (settings.ENABLE_SWAGGER) {
     app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 }
+app.use(routeNotFoundHandler);
+app.use(errorHandler);
 return app;
 };
 
