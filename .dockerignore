@@ -1,0 +1,14 @@
+node_modules
+.env
+.env.*
+!.env.example
+.git
+.gitignore
+logs
+uploads
+uploads_test
+coverage
+tests
+images
+README.md
+*.log
