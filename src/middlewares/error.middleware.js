@@ -34,6 +34,9 @@ export const errorHandler = (err, req, res, next) => {
             error = new AppError('VALIDATION_ERROR');
         }
     }
+    else if (err.type === 'entity.too.large') {
+        error = new AppError('PAYLOAD_TOO_LARGE');
+    }
     else {
         error = new AppError('INTERNAL_SERVER_ERROR');
     }

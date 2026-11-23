@@ -17,7 +17,7 @@ export const createApp = (settings = config) => {
     const isProduction = settings.NODE_ENV === 'production';
 
 app.use(express.json())
-
+app.use(express.json({ limit: '100kb' }))
 app.use('/api/users', usersRouter)
 app.use('/api/products', productsRouter)
 app.use('/api/orders', orderRouter)

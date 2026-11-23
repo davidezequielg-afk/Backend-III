@@ -96,5 +96,9 @@ export const ERROR_DICTIONARY = Object.freeze({
     INVALID_FILTERS: {
         statusCode: HTTP_STATUS.BAD_REQUEST,
         message: 'Los filtros proporcionados no son válidos'
+    },
+    PAYLOAD_TOO_LARGE: {
+        statusCode: HTTP_STATUS.PAYLOAD_TOO_LARGE,
+        message: 'El cuerpo de la petición es demasiado grande. El tamaño máximo permitido es de 100 KB'
     }
 });
