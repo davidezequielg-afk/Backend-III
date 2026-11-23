@@ -231,7 +231,7 @@ Desde esa página se puede ver cada endpoint y probarlo con el botón **Try it o
 | Schemas | `schemas.yaml` | Se encuentran los esquemas para creacion del Swagger |
 | Parameters | `parameters.yaml` | Se encuentran los parametros de la Paginacion |
 
-Cada endpoint incluye método, ruta, descripción, parámetros, body (si corresponde), respuestas exitosas y errores reales de la API (por ejemplo `INVALID_QTY` en mocks e `INVALID_STATUS` en pedidos y entregas).
+Cada endpoint de los módulos listados arriba incluye método, ruta, descripción, parámetros, body (si corresponde), respuestas exitosas y errores reales de la API (por ejemplo `INVALID_QTY` en mocks e `INVALID_STATUS` en pedidos y entregas). Los endpoints `/api/products` y `/api/health` no están documentados en Swagger; el health check se describe en la sección [Endpoints internos y producción](#endpoints-internos-y-producción).
 
 ### Aclaraciones para probar
 - Para tener datos con los que probar pedidos y entregas, ejecutar primero `POST /api/mocks/seed?qty=N` desde Swagger.
