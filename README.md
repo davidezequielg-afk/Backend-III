@@ -8,14 +8,7 @@ API de ShipNow con arquitectura por capas (Controller → Service → Repository
 ```bash
 npm install
 ```
-3. Una vez que ya esté todo instalado copiamos el archivo `.env.example` a `.env`, y completarlo con las variables solicitadas.
-
-```
-PORT=3000
-MONGODB_URI=mongodb://localhost:27017/shipnow
-NODE_ENV=development
-```
-- Para el caso de `NODE_ENV` tambien se puede poner production ya que tambien es valido.
+3. Una vez que ya esté todo instalado, copiamos el archivo `.env.example` a `.env` y lo completamos con las variables solicitadas. La lista completa, con valores válidos y un ejemplo, está en la sección [Variables de entorno](#variables-de-entorno).
 
 4. Una vez que el `.env` esté completo nos podremos poner a iniciar el servidor, usando la siguiente línea:
 ```bash
@@ -28,6 +21,32 @@ npm start
 - Si hay algún fallo de la API a la hora de iniciar se debe corroborar que todos las variables estén completas y sean auténticas y utilizables.
 
 Necesita un MongoDB en `mongodb://localhost:27017` la cual se ingresa en el `.env`.
+
+## Variables de entorno
+
+La configuración se lee de un archivo `.env` (para desarrollo y producción) o `.env.test` (para los tests). Las dos plantillas, `.env.example` y `.env.test.example`, están en el repositorio. La API valida todo al arrancar: si falta una variable obligatoria o tiene un valor inválido, **no inicia** y muestra todos los errores juntos.
+
+| Variable | Descripción | Valores válidos | Por defecto | Obligatoria |
+|---|---|---|---|---|
+| `PORT` | Puerto en el que escucha el servidor | Entero entre 1 y 65535 | — | Sí |
+| `MONGODB_URI` | URI de conexión a MongoDB (local o Atlas) | Una URI `mongodb://` o `mongodb+srv://` | — | Sí |
+| `NODE_ENV` | Entorno de ejecución | `development`, `test`, `production` | — | Sí |
+| `UPLOADS_DIR` | Carpeta donde se guardan documentos y comprobantes | Una ruta | `uploads` | No |
+| `LOG_LEVEL` | Nivel mínimo de logs en consola | `fatal`, `error`, `warning`, `info`, `http`, `debug` | `info` en `production`, `debug` en el resto | No |
+| `ENABLE_SWAGGER` | Publica la documentación en `/api/docs` | `true`, `false` | `true` | No |
+
+### Ejemplo de `.env`
+```env
+PORT=3000
+MONGODB_URI=mongodb://localhost:27017/shipnow
+NODE_ENV=development
+UPLOADS_DIR=uploads
+LOG_LEVEL=debug
+ENABLE_SWAGGER=true
+```
+
+### Qué no se usa
+Esta API no tiene autenticación ni consume servicios externos, por eso **no hay** variable para una clave JWT ni para URLs de terceros.
 
 ## Tecnologias en uso
 
@@ -83,7 +102,7 @@ Lo que busca esto es reemplazar los `console.log` sueltos permitiendo clasificar
 | `warning` | 2 | Errores esperados o del cliente: ID inválido, ruta inexistente, cantidad inválida |
 | `info` | 3 | Eventos normales: servidor iniciado, conexión a MongoDB, datos mock generados |
 | `http` | 4 | Registro de peticiones HTTP |
-| `debug` | 5 | Información de desarrollo, solo visible en `development` |
+| `debug` | 5 | Información de desarrollo, este depende de que `LOG_LEVEL=debug` |
 
 Un nivel registra también todos los de número menor: con `info` se ven `fatal`, `error`, `warning` e `info`. En los archivos de log solo se guardan `error` y `fatal`.
 
@@ -96,7 +115,7 @@ Se dejó creado un endpoint de prueba que genera un log de cada nivel. No es una
 
 1. Iniciar el servidor con `npm run dev`.
 2. Abrir `http://localhost:PUERTO/api/logger-test` (donde el `PUERTO` es el que quedó definido en el `.env`).
-3. Revisar la terminal: aparecen los niveles correspondientes al entorno.
+3. Revisar la terminal: aparecen los niveles correspondientes al entorno, que dependen de lo que diga el `LOG_LEVEL`.
 4. Revisar `logs/error-AAAA-MM-DD.log`: deben estar solo los niveles `error` y `fatal`.
 
 ### Guardado de logs
@@ -114,16 +133,19 @@ Los logs generados por esta aplicacion no se pueden subir a algun repositorio, y
 
 ### Comportamiento segun el entorno
 
-El nivel mínimo del logger depende de la variable `NODE_ENV` del `.env`:
+El nivel mínimo que se muestra en consola lo define la variable `LOG_LEVEL` del `.env`. Si no se define, se usa un valor por defecto según `NODE_ENV`:
 
-| `NODE_ENV` | Niveles que se muestran en consola |
-|---|---|
-| `development` | `debug`, `http`, `info`, `warning`, `error` y `fatal` |
-| `production` | `info`, `warning`, `error` y `fatal` |
+| `NODE_ENV` | `LOG_LEVEL` por defecto | Niveles que se muestran en consola |
+|---|---|---|
+| `development` | `debug` | `debug`, `http`, `info`, `warning`, `error` y `fatal` |
+| `production` | `info` | `info`, `warning`, `error` y `fatal` |
+| `test` | `debug` (el `.env.test.example` usa `error`) | Con `error`: solo `error` y `fatal` |
 
-En ambos entornos, el archivo de logs guarda solo `error` y `fatal`.
+Si `LOG_LEVEL` está definido, **tiene prioridad** sobre el valor por defecto en cualquier entorno. Por ejemplo, `NODE_ENV=production` con `LOG_LEVEL=warning` muestra solo `warning`, `error` y `fatal`. Un valor que no sea uno de los seis niveles hace que la API no arranque.
 
-**(Las evidencias de uso se encontraran detalladas en la seccion de evidencias)**
+En todos los entornos, el archivo de logs guarda solo `error` y `fatal`.
+
+**(Las evidencias de uso se encontraran detalladas en la seccion de [evidencias](#evidencias-de-uso))**
 
 ## Carga de archivos
 
@@ -131,7 +153,7 @@ La API permite subir documentos de usuarios y comprobantes de entrega usando **M
 
 ### Endpoints
 
-| Método | Ruta  Campos (`multipart/form-data`) | Descripción |
+| Método | Ruta | Campos (`multipart/form-data`) | Descripción |
 |---|---|---|---|
 | POST | `/api/users/:id/documents` | `file` (archivo), `documentType` (texto) | Sube un documento y lo registra en el usuario |
 | POST | `/api/deliveries/:id/receipts` | `file` (archivo) | Sube un comprobante y lo registra en la entrega |
@@ -188,7 +210,11 @@ La API esta documentada con **Swagger/OpenAPI** usando `swagger-jsdoc` y `swagge
 
 Desde esa página se puede ver cada endpoint y probarlo con el botón **Try it out**.
 
+- Si `ENABLE_SWAGGER=false` en el `.env`, la documentación **no se publica** y `/api/docs` responde `404 ROUTE_NOT_FOUND`. Por defecto está activada, también en producción (ver [Endpoints internos y producción](#endpoints-internos-y-producción)).
+- Con Docker, usar el puerto publicado con `-p` (ver [Docker](#docker)).
+
 ### Cómo está organizada
+
 - La configuración general (título, versión, servidor y tags) está en `src/config/swagger.config.js`, separada de la lógica de las rutas.
 - Cada módulo se documenta en su propio archivo dentro de `src/docs/`.
 - Los modelos reutilizables (`User`, `Order`, `OrderItem`, `Delivery`, `ErrorResponse`, `SuccessResponse`) están en `src/docs/schemas.yaml`.
@@ -197,11 +223,13 @@ Desde esa página se puede ver cada endpoint y probarlo con el botón **Try it o
 
 | Tag | Archivo | Qué documenta |
 |---|---|---|
-| Users | `users.yaml` | CRUD de usuarios |
-| Orders | `order.yaml` | Listar, obtener y cambiar el estado de un pedido |
-| Deliveries | `delivery.yaml` | Listar, obtener y cambiar el estado de una entrega |
+| Users | `users.yaml` | CRUD de usuarios paginados |
+| Orders | `order.yaml` | Listar segun paginacion, obtener y cambiar el estado de un pedido |
+| Deliveries | `delivery.yaml` | Listar segun paginacion, obtener y cambiar el estado de una entrega |
 | Mocks | `mocks.yaml` | Generar usuarios simulados y cargar datos de prueba |
 | Logger | `logger.yaml` | Endpoint de prueba del sistema de logs (herramienta de validación, no una funcionalidad de negocio) |
+| Schemas | `schemas.yaml` | Se encuentran los esquemas para creacion del Swagger |
+| Parameters | `parameters.yaml` | Se encuentran los parametros de la Paginacion |
 
 Cada endpoint incluye método, ruta, descripción, parámetros, body (si corresponde), respuestas exitosas y errores reales de la API (por ejemplo `INVALID_QTY` en mocks e `INVALID_STATUS` en pedidos y entregas).
 
@@ -240,11 +268,12 @@ La cual tiene la siguiente estructura:
     "tests/deliveries.test.js",
     "tests/mocks.test.js",
     "tests/logger.test.js",
-    "tests/swagger.test.js"
+    "tests/swagger.test.js",
+    "tests/uploads.test.js"
   ]
 }
 ```
-En el caso de agregar mas tests se deben incluir en este archivo de manera obligatoria, ya que de no hacerlo ese o esos tests no apareceran en la terminal. En el caso de querer dejar sin importancia el orden de los tests, no se debe agregar este archivo y en el `package.json` se debe cambiar, en la parte de scripts de
+En el caso de agregar mas tests se deben incluir en este archivo de manera obligatoria, ya que de no hacerlo ese o esos tests no apareceran en la terminal. En el caso de querer dejar sin importancia el orden de los tests, se puede eliminar este archivo y en el `package.json` se debe cambiar, en la parte de scripts de
 ```json
 {
     "test": "mocha"
@@ -255,7 +284,7 @@ a
 
 ```json
 {
-    "test": "mocha --import=./tests/setup.js tests/**/*.test.js"
+  "test": "mocha --import=./tests/setup.js tests/**/*.test.js"
 }
 ```
 
@@ -265,14 +294,17 @@ Los tests **necesitan una base de datos de testing, separada de la de desarrollo
 1. Copiar `.env.test.example` a `.env.test`.
 2. Completar las variables:
 
-```
+```env
 PORT=3001
 MONGODB_URI=mongodb://localhost:27017/shipnow_test
 NODE_ENV=test
 UPLOADS_DIR=uploads_test
+LOG_LEVEL=error
+ENABLE_SWAGGER=true
 ```
 
 - `MONGODB_URI` puede ser un MongoDB local o un cluster de Atlas, pero **siempre con una base distinta a la de desarrollo** (por ejemplo `shipnow_test`).
+- `LOG_LEVEL=error` evita que los logs ensucien la salida de los tests, y `ENABLE_SWAGGER=true` es necesario para `tests/swagger.test.js`.
 - Los tests **borran por completo la base de testing**. Por seguridad, si la URI no contiene la palabra `test`, los tests se niegan a ejecutarse.
 - `.env.test` no se sube a Git (está en el `.gitignore`).
 
@@ -284,19 +316,89 @@ UPLOADS_DIR=uploads_test
 
 | Archivo | Módulo | Casos principales |
 |---|---|---|
-| `tests/user.test.js` | Users | Crear, listar y consultar por ID. Errores: email faltante, usuario duplicado, ID inválido, usuario inexistente |
-| `tests/order.test.js` | Orders | Crear, listar, consultar por ID y cambiar estado. Errores: datos incompletos, `INVALID_ID`, `USER_NOT_FOUND`, `ORDER_NOT_FOUND`, `INVALID_STATUS` |
-| `tests/deliveries.test.js` | Deliveries | Listar, consultar por ID y cambiar estado. Errores: `INVALID_ID`, `DELIVERY_NOT_FOUND`, `INVALID_STATUS`, `INVALID_JSON` |
+| `tests/user.test.js` | Users | Crear y consultar por ID. Listado paginado con filtro `role`. Errores: email faltante, usuario duplicado, `INVALID_ID`, `USER_NOT_FOUND`, `INVALID_PAGINATION`, `INVALID_FILTERS` y body demasiado grande (`PAYLOAD_TOO_LARGE`) |
+| `tests/order.test.js` | Orders | Crear, consultar por ID y cambiar estado. Listado paginado con filtros `status` y `priority`. Errores: `VALIDATION_ERROR`, `INVALID_ID`, `USER_NOT_FOUND`, `ORDER_NOT_FOUND`, `INVALID_STATUS`, `INVALID_PAGINATION`, `INVALID_FILTERS` |
+| `tests/deliveries.test.js` | Deliveries | Consultar por ID y cambiar estado. Listado paginado con filtro `status`. Errores: `INVALID_ID`, `DELIVERY_NOT_FOUND`, `INVALID_STATUS`, `INVALID_JSON`, `INVALID_PAGINATION`, `INVALID_FILTERS` |
 | `tests/mocks.test.js` | Mocks | Generar usuarios y cargar datos de prueba. Errores: `INVALID_QTY` (negativa, cero, decimal, texto y mayor a 100) |
 | `tests/logger.test.js` | Logger | Respuesta de `GET /api/logger-test` y ruta con método no permitido |
 | `tests/swagger.test.js` | Swagger | La ruta `/api/docs` y que la especificación documente los endpoints principales |
-| `tests/health.test.js` | Rutas | Ruta inexistente (`ROUTE_NOT_FOUND`) |
+| `tests/health.test.js` | Salud y entorno | `GET /api/health` (campos, tipos y ausencia de datos sensibles), ruta inexistente (`ROUTE_NOT_FOUND`) y endpoints internos según `NODE_ENV` y `ENABLE_SWAGGER` |
 | `tests/uploads.test.js` | Carga de archivos | Documentos de usuario y comprobantes. Errores: `FILE_REQUIRED`, `INVALID_FILE_TYPE`, `INVALID_FILE_FIELD`, `FILE_TOO_LARGE`, `INVALID_DOCUMENT_TYPE`, `INVALID_ID` y entidad inexistente. También se comprueba que no queden archivos huérfanos |
 
 **Aclaracion importante sobre los uploads:** 
 - `UPLOADS_DIR` debe apuntar a una carpeta que contenga `test` en el nombre: los tests guardan ahí los archivos de prueba y los borran al terminar. Si falta o no contiene `test`, los tests de carga fallan por seguridad.
 
 Los tests de cada recurso comprueban los casos documentados en Swagger, para mantener la documentación y la API coherentes.
+
+## Paginación y filtros
+
+Los tres listados (`GET /api/users`, `GET /api/orders` y `GET /api/deliveries`) devuelven los resultados **paginados**, para no cargar todo de una vez ni responder con cuerpos enormes.
+
+### Parámetros de paginación
+| Parámetro | Descripción | Por defecto | Reglas |
+|---|---|---|---|
+| `page` | Número de página | `1` | Entero mayor a 0 |
+| `limit` | Resultados por página | `10` | Entero entre 1 y 100 |
+
+Los resultados vienen ordenados del **más nuevo al más antiguo**, así el orden es estable entre páginas.
+
+### Filtros por entidad
+| Endpoint | Filtros aceptados | Valores válidos |
+|---|---|---|
+| `GET /api/users` | `role` | `admin`, `user`, `courier` |
+| `GET /api/orders` | `status` y `priority` | `status`: `pending`, `processing`, `completed`, `cancelled`. `priority`: `low`, `medium`, `high` |
+| `GET /api/deliveries` | `status` | `pending`, `in_transit`, `delivered`, `cancelled` |
+
+- Los filtros se pueden combinar con la paginación: `?status=pending&priority=high&page=2&limit=5`.
+- Si se envían dos filtros, el resultado cumple **ambos** a la vez.
+- Cualquier parámetro que no esté en la tabla se **ignora**.
+- Un valor que no existe (por ejemplo `?role=inventado`) no es un error: responde `200` con una lista vacía.
+
+### Formato de la respuesta
+`data` sigue siendo un arreglo, y el objeto `pagination` va al lado:
+```json
+{
+  "status": "success",
+  "data": [ { "_id": "...", "status": "pending", "priority": "high" } ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 25,
+    "totalPages": 3,
+    "hasNextPage": true,
+    "hasPrevPage": false
+  }
+}
+```
+
+| Campo | Significado |
+|---|---|
+| `page` y `limit` | Los valores usados en la consulta |
+| `total` | Cantidad de resultados que cumplen el filtro, sin contar la paginación |
+| `totalPages` | Cantidad de páginas (`total / limit`, redondeado hacia arriba) |
+| `hasNextPage` | `true` si existe una página siguiente |
+| `hasPrevPage` | `true` si existe una página anterior |
+
+### Errores
+| Código | Estado | Cuándo ocurre |
+|---|---|---|
+| `INVALID_PAGINATION` | 400 | `page` o `limit` no son enteros, son menores a 1, o `limit` supera 100 |
+| `INVALID_FILTERS` | 400 | Un filtro no es un texto simple. Por ejemplo `?role[$ne]=admin` |
+
+El segundo caso protege contra inyección de operadores de MongoDB: los filtros solo aceptan texto, y por eso el filtro llega a la base ya validado.
+
+### Ejemplos
+```bash
+curl "http://localhost:3000/api/users?role=courier&limit=5"
+curl "http://localhost:3000/api/orders?status=pending&priority=high"
+curl "http://localhost:3000/api/deliveries?status=delivered&page=2&limit=3"
+```
+Los parámetros también se pueden probar desde Swagger (`/api/docs`), donde están documentados.
+
+### Dónde está implementado
+- `src/utils/pagination.util.js`: valida `page` y `limit`, elige los filtros permitidos y arma `pagination`.
+- Cada Repository hace la consulta paginada y cuenta el total con el **mismo filtro**.
+- Los tests están en `tests/user.test.js`, `tests/order.test.js` y `tests/deliveries.test.js`.
 
 ## Endpoints
 
@@ -307,19 +409,25 @@ Los tests de cada recurso comprueban los casos documentados en Swagger, para man
 | GET | /api/products/:id | Obtener un producto |
 | PATCH | /api/products/:id | Actualizar parcialmente |
 | DELETE | /api/products/:id | Eliminar |
-| POST / GET / PATCH / DELETE | /api/users | Mismo esquema para usuarios |
-| GET | /api/mocks/users?qty=N | Simulacion de creacion de usuarios |
-| POST | /api/mocks/seed?qty=N | Inserccion de Usuarios, Pedidos y envios a la BBDD (todos son datos no reales) |
-| GET | /api/logger-test | Genera logs de los 6 niveles (solo para pruebas) |
-| GET | /api/orders | Listar pedidos (filtros opcionales `status` y `priority`) |
+| POST | /api/users | Crear un usuario |
+| GET | /api/users | Listar usuarios, paginados (filtro opcional `role`) |
+| GET / PATCH / DELETE | /api/users/:id | Obtener, actualizar o eliminar un usuario |
+| GET | /api/mocks/users?qty=N | Simulacion de creacion de usuarios (No disponible en produccion) |
+| POST | /api/mocks/seed?qty=N | Inserccion de Usuarios, Pedidos y envios a la BBDD (No disponible en produccion, los datos de estos no son reales) |
+| GET | /api/logger-test | Genera logs de los 6 niveles (No disponible en produccion, su uso es solo para realizar pruebas) |
+| GET | /api/orders | Listar pedidos paginados con filtros opcionales `status` y `priority` |
 | GET | /api/orders/:id | Obtener un pedido |
 | PATCH | /api/orders/:id/status | Cambiar el estado de un pedido |
 | POST | /api/orders | Crear un pedido |
-| GET | /api/deliveries | Listar entregas |
+| GET | /api/deliveries | Listar entregas paginadas con filtro `status` |
 | GET | /api/deliveries/:id | Obtener una entrega |
 | PATCH | /api/deliveries/:id/status | Cambiar el estado de una entrega |
 | POST | /api/users/:id/documents | Subir un documento de un usuario (multipart/form-data) |
 | POST | /api/deliveries/:id/receipts | Subir un comprobante de una entrega (multipart/form-data) |
+| GET | /api/health | Estado del servicio: `status`, `environment`, `uptime` y `timestamp` |
+
+- Los listados de usuarios, pedidos y entregas aceptan `page` y `limit`. Ver [Paginación y filtros](#paginación-y-filtros).
+- Los endpoints marcados como "no disponible en producción" se explican en [Endpoints internos y producción](#endpoints-internos-y-producción).
 
 ## Separación y reestructuración de la API.
 Antes de comenzar con este proyecto nos encontrábamos con una API con pocos archivos y cada uno tenía miles tareas para ejecutar. Por lo que se decidió realizarle una limpieza y una reestructuración.
@@ -347,6 +455,73 @@ Los endPoints que se usaran son:
 
 ### Relaciones.
 Para comprender mejor la union de cada cosa hay que relacionar que cada pedido ingresado corresponde a un solo usuario, y cada uno de estos pedidos le corresponde un envio que queda a cargo de un solo repartidor, el cual es un usuario con otra responsabilidad (courier). En el caso que no salga ninguno de estos ultimos el envio quedara sin un repartidor asignado.
+
+## Docker
+
+La API se puede correr en un contenedor. La imagen se construye con el `Dockerfile` del repositorio.
+
+### Qué contiene la imagen
+- Base `node:22-alpine`.
+- Solo las dependencias de producción (`npm ci --omit=dev`) y la carpeta `src`. No incluye tests, `.env` ni `node_modules` locales (ver `.dockerignore`).
+- El proceso corre con el usuario `node`, sin privilegios de administrador.
+- Por defecto: `NODE_ENV=production`, `PORT=3000` y `UPLOADS_DIR=uploads`. El puerto `3000` queda expuesto.
+- **No incluye `MONGODB_URI`**: hay que pasarla al correr el contenedor.
+
+### Construir la imagen
+```bash
+docker build -t shipnow-api .
+```
+
+### Correr el contenedor
+Las variables se cargan desde un archivo con `--env-file`:
+```bash
+docker run -d --name shipnow --env-file .env -e PORT=3000 -e NODE_ENV=production -p 3000:3000 shipnow-api
+```
+
+| Parte | Para qué sirve |
+|---|---|
+| `--env-file .env` | Carga las variables del archivo (ver [Variables de entorno](#variables-de-entorno)) |
+| `-e PORT=3000` | Fuerza el puerto interno para que coincida con el `EXPOSE` y con `-p` |
+| `-e NODE_ENV=production` | Evita que un `NODE_ENV=development` del `.env` pise el valor del contenedor |
+| `-p 3000:3000` | Publica el puerto: `puerto-de-tu-pc:puerto-del-contenedor` |
+
+- Si `MONGODB_URI` apunta a `localhost`, dentro del contenedor `localhost` es el propio contenedor y no tu PC. Para usar un MongoDB instalado en tu PC, usa `host.docker.internal` en lugar de `localhost`. Con MongoDB Atlas no hace falta cambiar nada.
+- Si falta una variable obligatoria o tiene un valor inválido, el contenedor se detiene al arrancar y el motivo queda en los logs.
+
+### Comprobar que funciona
+| URL | Qué debe pasar |
+|---|---|
+| `http://localhost:3000/api/health` | Responde `200` con `status`, `environment`, `uptime` y `timestamp` |
+| `http://localhost:3000/api/docs` | Muestra Swagger |
+| `http://localhost:3000/api/users?limit=2` | Lista de usuarios paginada |
+
+### Comandos útiles
+```bash
+docker logs shipnow     # ver los logs
+docker stop shipnow     # detener el contenedor
+docker rm shipnow       # borrarlo
+```
+
+### Logs y archivos subidos
+Las carpetas `logs/` y `uploads/` están **dentro del contenedor**: si se borra, se pierden. Para conservarlas se montan volúmenes:
+```bash
+docker run -d --name shipnow --env-file .env -e PORT=3000 -e NODE_ENV=production \
+  -v shipnow-uploads:/app/uploads -v shipnow-logs:/app/logs \
+  -p 3000:3000 shipnow-api
+```
+`logs/` y `uploads/` no se suben al repositorio ni a la imagen.
+
+### Archivos que no se suben
+| Archivo o carpeta | Git (`.gitignore`) | Imagen (`.dockerignore`) |
+|---|---|---|
+| `.env` y `.env.test` | No se suben | No se incluyen |
+| `.env.example` y `.env.test.example` | Sí se suben | No se incluyen |
+| `node_modules` | No se sube | No se incluye (se instala dentro de la imagen) |
+| `logs/` y `uploads/` | No se suben | No se incluyen |
+| `tests/` | Sí se sube | No se incluye |
+
+### Si `docker build` falla con `docker-credential-desktop`
+Es un problema de Docker Desktop en algunas terminales de Windows, no del proyecto. Abre una terminal nueva o reinicia Docker Desktop.
 
 ## Manejo de errores.
 Para poder centralizar las respuestas y codigos de errores se realiza una integracion de todos estos en un solo lugar, lo que beneficia a la busqueda de errores. Por ejemplo si tenemos un error de HTTP: 404 y la API nos brinda un 500, el primer lugar donde debemos buscar es el este archivo (` \src\errors\error.dictionary.js `). A su vez a la hora de realizar una nueva integracion que pueda contener respuestas a errores no hay que escribirlos a mano.
@@ -378,6 +553,9 @@ Las reespuestas que encontraremos en esta seccion son:
 | `SEED_FAILED` | 500 | Error al cargar los datos de prueba del sistema en la base de datos | Falló la inserción de los datos simulados en la Base de Datos. |
 | `INTERNAL_SERVER_ERROR` | 500 | Error interno del servidor | Error inesperado que no corresponde a ningún caso anterior. |
 | `DELIVERY_NOT_FOUND` | 404 | Entrega no encontrada | No existe una entrega con el ID indicado. |
+| `INVALID_PAGINATION` | 400 | Los parámetros de paginación no son válidos... | `page` no es un entero mayor a 0, o `limit` no es un entero entre 1 y 100. |
+| `INVALID_FILTERS` | 400 | Los filtros proporcionados no son válidos | Un filtro permitido (`role`, `status`, `priority`) llega con un valor que no es texto, por ejemplo `status[$ne]=x`. |
+| `PAYLOAD_TOO_LARGE` | 413 | El cuerpo de la petición es demasiado grande... | El body JSON supera los 100 KB. |
 
 ### Comprobaciones de los casos inválidos
 Todas las pruebas se deben hacer con el servidor corriendo y desde Postman o programa similar. En cada caso, la respuesta tiene que tener la estructura de error que describimos mas arriba.
@@ -398,6 +576,58 @@ Todas las pruebas se deben hacer con el servidor corriendo y desde Postman o pro
 | Email ya en uso | `PATCH /api/users/<id>` | 409 | `EMAIL_ALREADY_EXISTS` | Actualizar un usuario con el `email` de otro. |
 | Producto inexistente | `GET /api/products/<id válido>` | 404 | `PRODUCT_NOT_FOUND` | Usar un ID con formato correcto que no esté en la base. |
 | Producto duplicado | `POST /api/products` | 409 | `PRODUCT_ALREADY_EXISTS` | Crear dos productos con el mismo `name`. |
+| Página inválida | `GET /api/users?page=0` | 400 | `INVALID_PAGINATION` | Enviar `page=0` o un valor no numérico. |
+| Límite excedido | `GET /api/orders?limit=101` | 400 | `INVALID_PAGINATION` | Enviar `limit` mayor a 100. |
+| Filtro con inyección | `GET /api/deliveries?status[$ne]=x` | 400 | `INVALID_FILTERS` | Enviar el filtro como objeto, no como texto. |
+
+## Endpoints internos y producción
+
+Algunos endpoints no son parte del negocio: sirven para probar, documentar o monitorear. El criterio es **no exponer en producción lo que escribe datos o no tiene valor para un cliente**, y mantener lo que ayuda a operar el servicio.
+
+| Endpoint | `development` y `test` | `production` | Motivo |
+|---|---|---|---|
+| `/api/mocks/*` | Disponible | **No disponible** (404) | Genera datos falsos y **escribe en la base**. En producción sería peligroso |
+| `/api/logger-test` | Disponible | **No disponible** (404) | Solo valida el sistema de logs y llena los registros sin aportar valor |
+| `/api/docs` (Swagger) | Disponible | Disponible, salvo `ENABLE_SWAGGER=false` | La documentación se publica por defecto. Se puede apagar sin tocar el código |
+| `/api/health` | Disponible | **Siempre disponible** | Permite saber si el servicio está vivo, y no expone datos sensibles |
+
+Cuando un endpoint está desactivado no existe: responde igual que cualquier ruta inexistente, con el error `ROUTE_NOT_FOUND` (404).
+
+### Cómo se controla
+- `/api/mocks` y `/api/logger-test` dependen de `NODE_ENV`: solo se montan si **no** vale `production`.
+- `/api/docs` depende de `ENABLE_SWAGGER`.
+- La decisión se toma al construir la aplicación, en `createApp` (`src/app.js`).
+
+### Health check
+`GET /api/health` responde `200` con:
+```json
+{
+  "status": "ok",
+  "environment": "production",
+  "uptime": 123.45,
+  "timestamp": "2026-11-23T20:08:08.665Z"
+}
+```
+
+| Campo | Significado |
+|---|---|
+| `status` | `ok` si el proceso está vivo |
+| `environment` | Valor de `NODE_ENV` |
+| `uptime` | Segundos desde que arrancó el proceso |
+| `timestamp` | Fecha y hora de la respuesta, en formato ISO (UTC) |
+
+Solo indica que el proceso responde: **no comprueba la conexión con la base de datos**. No incluye datos sensibles (URI de la base, rutas internas ni variables de entorno).
+
+Este endpoint usa campos planos, sin el formato `{ status, data }` del resto de la API, porque lo consumen herramientas de monitoreo.
+
+### Comprobarlo
+Con `NODE_ENV=production`:
+```bash
+curl -i http://localhost:3000/api/mocks/users     # 404 ROUTE_NOT_FOUND
+curl -i http://localhost:3000/api/logger-test     # 404 ROUTE_NOT_FOUND
+curl -i http://localhost:3000/api/health          # 200
+```
+Estos casos están cubiertos por los tests de `tests/health.test.js` ("Endpoints internos segun el entorno").
 
 ## Evidencias de Uso.
 ### A continuacion se veran, en formato de imagenes, las evidencias de como se verian el uso de las RUTAS mediante el uso del programa de POSTMAN.
@@ -456,13 +686,13 @@ Todas las pruebas se deben hacer con el servidor corriendo y desde Postman o pro
 ![POST /api/mocks](images/POST%20api-mocks-error.png)
 
 ## Evidencias de logs
-### A continuacion se veran, en formato de imagenes, las evidencias de cómo se registran los logs según la variable **NODE_ENV**, detalles de los mismos.
+### A continuacion se veran, en formato de imagenes, las evidencias de cómo se registran los logs según la variable **LOG_LEVEL**, detalles de los mismos.
 
-**development**
+**Debug**
 - GET /api/logger-test
 ![GET /api/logger-test dev](images/GET%20-api-logger-test-development.png)
 
-**production**
+**Info**
 - GET /api/logger-test
 ![GET /api/logger-test prod](images/GET%20-api-logger-test-production.png)
 
