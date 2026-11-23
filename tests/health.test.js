@@ -1,5 +1,8 @@
 import { expect } from "chai";
 import { api, connectTestDB, clearDB, disconnectTestDB } from "./helpers.js";
+import request from "supertest";
+import { createApp } from "../src/app.js";
+import { config } from "../src/config/env.config.js";
 
 describe('Configuracion de test', () => {
     before(connectTestDB);
@@ -40,5 +43,39 @@ describe('GET /api/health', () => {
         const res = await api.get('/api/health');
         expect(Object.keys(res.body)).to.have.members(['status', 'environment', 'uptime', 'timestamp']);
         expect(res.text).to.not.include('mongodb://');
+    });
+});
+describe('Endpoints internos segun el entorno', () => {
+    const appIn = (overrides) => request(createApp({ ...config, ...overrides }));
+
+    it('en produccion no expone /api/mocks', async () => {
+        const res = await appIn({ NODE_ENV: 'production' }).get('/api/mocks/users');
+        expect(res.status).to.equal(404);
+        expect(res.body).to.have.property('code', 'ROUTE_NOT_FOUND');
+    });
+
+    it('en produccion no expone /api/logger-test', async () => {
+        const res = await appIn({ NODE_ENV: 'production' }).get('/api/logger-test');
+        expect(res.status).to.equal(404);
+        expect(res.body).to.have.property('code', 'ROUTE_NOT_FOUND');
+    });
+
+    it('en produccion mantiene activo /api/health', async () => {
+        const res = await appIn({ NODE_ENV: 'production' }).get('/api/health');
+        expect(res.status).to.equal(200);
+    });
+
+    it('con ENABLE_SWAGGER en false no publica /api/docs', async () => {
+        const res = await appIn({ ENABLE_SWAGGER: false }).get('/api/docs/');
+        expect(res.status).to.equal(404);
+        expect(res.body).to.have.property('code', 'ROUTE_NOT_FOUND');
+    });
+
+    it('en desarrollo expone /api/logger-test y /api/docs', async () => {
+        const app = appIn({ NODE_ENV: 'development' });
+        const logger = await app.get('/api/logger-test');
+        const docs = await app.get('/api/docs/');
+        expect(logger.status).to.equal(200);
+        expect(docs.status).to.equal(200);
     });
 });
