@@ -193,7 +193,7 @@ describe('Users', () => {
             const res = await api.get('/api/users?role[$ne]=admin');
             expect(res.status).to.equal(400);
             expect(res.body).to.have.property('code', 'INVALID_FILTERS');
-});
+        });
     });
 
     describe('GET /api/users/:id', () => {
