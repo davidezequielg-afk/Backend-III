@@ -194,6 +194,12 @@ describe('Users', () => {
             expect(res.status).to.equal(400);
             expect(res.body).to.have.property('code', 'INVALID_FILTERS');
         });
+        it('devuelve 413 PAYLOAD_TOO_LARGE si el body supera el límite', async () => {
+            const res = await api.post('/api/users').send({ ...validUser, name: 'x'.repeat(200 * 1024) });
+            expect(res.status).to.equal(413);
+            expect(res.body).to.have.property('status', 'error');
+            expect(res.body).to.have.property('code', 'PAYLOAD_TOO_LARGE');
+        });
     });
 
     describe('GET /api/users/:id', () => {
