@@ -16,15 +16,15 @@ export const createOrderController = async (req, res, next) => {
 
 export const getAllOrdersController = async (req, res, next) => {
     try {
-        const orders = await OrderService.getAllOrders(req.query);
-        res.status(HTTP_STATUS.OK).json({
-            status: RESPONSE_STATUS.SUCCESS,
-            data: orders
+        const { items, pagination } = await OrderService.getAllOrders(req.query);
+        res.status(HTTP_STATUS.OK).json({ 
+            status: RESPONSE_STATUS.SUCCESS, 
+            data: items, pagination 
         });
     } catch (error) {
         next(error);
     }
-};
+};  
 
 export const getOrderByIdController = async (req, res, next) => {
     try {

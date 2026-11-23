@@ -6,8 +6,18 @@ class OrderRepository {
     async create(data) {
         return Order.create(data);
     }
-    async getAll(filter = {}) {
-        return Order.find(filter).populate('user', 'name email role').select(DEFAULT_PROJECTION).lean();
+    async getAll(filter = {}, { skip, limit } = {}) {
+    const [orders, count] = await Promise.all([
+        Order.find(filter)
+            .populate('user', 'name email role')
+            .select(DEFAULT_PROJECTION)
+            .sort({ _id: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean(),
+        Order.countDocuments(filter)
+    ]);
+    return { items: orders, total: count };
     }
     async getById(id) {
         return Order.findById(id).populate('user', 'name email role').select(DEFAULT_PROJECTION).lean();
