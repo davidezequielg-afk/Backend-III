@@ -155,3 +155,25 @@ components:
           type: string
           format: date-time
           example: 2026-11-16T03:56:46.264Z
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+        total:
+          type: integer
+          example: 25
+        totalPages:
+          type: integer
+          example: 3
+        hasNextPage:
+          type: boolean
+          example: true
+        hasPrevPage:
+          type: boolean
+          example: false

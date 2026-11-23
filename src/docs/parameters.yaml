@@ -1,0 +1,22 @@
+components:
+  parameters:
+    PageParam:
+      in: query
+      name: page
+      required: false
+      description: Número de página
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    LimitParam:
+      in: query
+      name: limit
+      required: false
+      description: Cantidad de resultados por página (máximo 100)
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
