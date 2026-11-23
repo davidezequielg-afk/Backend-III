@@ -137,7 +137,7 @@ const seedOrders = async (user, list) => {
             expect(res.body.pagination).to.have.property('hasPrevPage', true);
             expect(res.body.data).to.be.an('array').with.lengthOf(1);
         });
-        it('devuelve 400 si el limite no es mayor al limite maximo', async () => {    
+        it('devuelve 400 si el limite no es valido', async () => {    
             for (const limit of ['0', '-1', 'abc', '2.5']) {
                 const res = await api.get(`/api/orders?limit=${limit}`);
                 expect(res.status).to.equal(400);
