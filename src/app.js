@@ -10,21 +10,30 @@ import { errorHandler, routeNotFoundHandler } from './middlewares/error.middlewa
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './config/swagger.config.js';
 import healthRouter from './routes/health.js';
+import { config } from './config/env.config.js';
 
-const app = express();
+export const createApp = (settings = config) => {
+    const app = express();
+    const isProduction = settings.NODE_ENV === 'production';
 
 app.use(express.json())
 
 app.use('/api/users', usersRouter)
 app.use('/api/products', productsRouter)
-app.use('/api/mocks', mocksRouter)
 app.use('/api/orders', orderRouter)
 app.use('/api/deliveries', deliveryRouter)
-app.use('/api/logger-test', loggerRouter)
 app.use('/api/health', healthRouter)
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use(routeNotFoundHandler);
 app.use(errorHandler);
 
+if (!isProduction) {
+    app.use('/api/mocks', mocksRouter)
+    app.use('/api/logger-test', loggerRouter)
+}
+if (settings.ENABLE_SWAGGER) {
+    app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+}
+return app;
+};
 
-export default app;
+export default createApp();
